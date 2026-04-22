@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MTBank Mobile Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="phone-container">
+        <!-- Статус бар -->
+        <header class="header">
+            <div class="status-item">🪙 1,250</div>
+            <div class="status-item">💎 10</div>
+            <div class="status-item">⭐ 5 LVL</div>
+        </header>
+
+        <!-- Игровая зона -->
+        <main class="game-area">
+            
+            <!-- ТВОЯ КОМНАТА ИЗ ROOMS.XYZ -->
+            <div class="room-container">
+                <iframe 
+                    src="https://rooms.xyz/samuymalost/mtd" 
+                    allow="camera; microphone; fullscreen; xr-spatial-tracking;">
+                </iframe>
+            </div>
+
+            <!-- Правый сайдбар -->
+            <aside class="sidebar-right">
+                <div class="side-item">
+                    <div class="side-icon">📰</div>
+                    <div class="side-text">Инфо</div>
+                </div>
+                <div class="side-item">
+                    <div class="side-icon">🛒</div>
+                    <div class="side-text">Шоп</div>
+                </div>
+                <div class="side-item">
+                    <div class="side-icon">💡</div>
+                    <div class="side-text">академия</div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Нижнее меню -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-text">Дом</div>
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">🎲</div>
+                <div class="nav-text">Игра</div>
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">🏆</div>
+                <div class="nav-text">Топ</div>
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">👥</div>
+                <div class="nav-text">Друзья</div>
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">📈</div>
+                <div class="nav-text">Стонкс</div>
+            </a>
+        </nav>
+    </div>
+
+</body>
+</html>
