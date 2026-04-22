@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>MTBank · Streamer Tycoon</title>
+    <!-- Telegram Web App API -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* =========================================
+           ПРЕМИУМ ДИЗАЙН · LIQUID GLASS + ТЕМА TG
+           ========================================= */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-dark: #0c0c0f;
+            --accent: #ccff00;
+            --accent-glow: rgba(204, 255, 0, 0.25);
+            --glass-bg: rgba(20, 20, 25, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --card-radius: 24px;
+            --transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        /* Адаптация под тему Telegram */
+        body {
+            background: var(--tg-theme-bg-color, var(--bg-dark));
+            color: var(--tg-theme-text-color, #fff);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            overflow: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 3D фон — iframe с эффектом размытия для глубины */
+        #bg-iframe {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            border: none; z-index: 0;
+            pointer-events: none;
+            filter: brightness(0.95);
+        }
+
+        /* Основной UI слой */
+        .app-container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            backdrop-filter: blur(2px);
+            pointer-events: none; /* потом включаем для кликабельных */
+        }
+
+        .clickable { pointer-events: auto; }
+
+        /* Шапка */
+        .game-header {
+            padding: 16px 16px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        .stats-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            padding: 10px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .stat-icon { font-size: 20px; }
+
+        .settings-btn {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            width: 48px; height: 48px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .settings-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.15); }
+
+        /* Боковая панель (быстрые действия) */
+        .quick-actions {
+            position: absolute;
+            right: 16px;
+            top: 120px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: auto;
+            z-index: 20;
+        }
+
+        .quick-btn {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            width: 52px; height: 52px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            cursor: pointer;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            transition: var(--transition);
+        }
+
+        .quick-btn:active { transform: scale(0.88); background: var(--accent); color: #000; }
+
+        /* Основная область контента — переключаемые экраны */
+        .screens-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            pointer-events: auto;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            overflow-y: auto;
+            padding: 8px 16px 20px;
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            scrollbar-width: none;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            background: rgba(10, 10, 15, 0.4);
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Главный экран — особый, полупрозрачный */
+        #screen-home {
+            background: transparent;
+            backdrop-filter: none;
+            justify-content: space-between;
+        }
+
+        /* Карточки и UI элементы */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--card-radius);
+            padding: 20px 18px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--accent);
+            letter-spacing: -0.3px;
+        }
+
+        /* Кнопка клика (главная) */
+        .click-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0 10px;
+        }
+
+        .main-click-btn {
+            background: var(--accent);
+            color: #0a0a0a;
+            border: none;
+            width: 180px;
+            height: 180px;
+            border-radius: 100px;
+            font-weight: 900;
+            font-size: 28px;
+            box-shadow: 0 0 40px var(--accent-glow), 0 15px 30px rgba(0,0,0,0.5);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid rgba(255,255,255,0.4);
+            margin-bottom: 12px;
+        }
+
+        .main-click-btn:active {
+            transform: scale(0.92);
+            box-shadow: 0 0 60px var(--accent);
+        }
+
+        .click-hint {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* Прогресс уровень */
+        .level-progress {
+            background: rgba(255,255,255,0.1);
+            height: 8px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        /* Магазин — сетка улучшений */
+        .shop-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .upgrade-card {
+            background: rgba(30, 30, 35, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 16px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .upgrade-card:active { background: rgba(80, 80, 90, 0.8); transform: scale(0.97); }
+
+        .upgrade-emoji { font-size: 32px; margin-bottom: 8px; }
+        .upgrade-name { font-weight: 700; font-size: 15px; }
+        .upgrade-desc { font-size: 12px; opacity: 0.7; margin: 5px 0; }
+        .upgrade-price { color: var(--accent); font-weight: bold; margin-top: 6px; }
+
+        /* Список заданий */
+        .task-item {
+            background: rgba(40, 40, 45, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .task-reward {
+            background: var(--accent);
+            color: black;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .task-reward:active { opacity: 0.7; }
+
+        /* Нижняя навигация (таббар) */
+        .tabbar {
+            background: rgba(15, 15, 20, 0.9);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            padding: 8px 0 18px;
+            pointer-events: auto;
+            z-index: 30;
+        }
+
+        .tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            opacity: 0.5;
+            cursor: pointer;
+            transition: var(--transition);
+            color: #fff;
+        }
+
+        .tab.active {
+            opacity: 1;
+            color: var(--accent);
+        }
+
+        .tab-icon { font-size: 24px; }
+        .tab-text { font-size: 11px; font-weight: 600; }
+
+        /* Утилиты */
+        .mt-2 { margin-top: 8px; }
+        .text-center { text-align: center; }
+
+        /* Анимация получения валюты */
+        .float-amount {
+            position: fixed;
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 24px;
+            pointer-events: none;
+            animation: floatUp 1s forwards;
+            z-index: 999;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-60px); }
+        }
+
+        /* Подстройка под мобильные */
+        @media (max-width: 400px) {
+            .stat-card { padding: 6px 12px; font-size: 14px; }
+            .main-click-btn { width: 150px; height: 150px; font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D фон из rooms.xyz -->
+    <iframe id="bg-iframe" src="https://rooms.xyz/vanya/demo" allow="autoplay; fullscreen"></iframe>
+
+    <div class="app-container">
+        <!-- Верхняя панель -->
+        <header class="game-header">
+            <div class="stats-group">
+                <div class="stat-card">
+                    <span class="stat-icon">💎</span>
+                    <span id="balanceDisplay">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">⚡</span>
+                    <span id="levelDisplay">1</span>
+                </div>
+            </div>
+            <div class="settings-btn" id="settingsTrigger">⚙️</div>
+        </header>
+
+        <!-- Быстрые действия -->
+        <div class="quick-actions clickable">
+            <div class="quick-btn" id="quickShopBtn">🛒</div>
+            <div class="quick-btn" id="quickEarnBtn">💰</div>
+        </div>
+
+        <!-- Контейнер экранов -->
+        <div class="screens-container">
+            <!-- Главный экран (Home) -->
+            <div id="screen-home" class="screen active">
+                <div style="flex:1;"></div>
+                <div class="glass-panel" style="text-align: center; margin-top: auto;">
+                    <div style="font-size: 40px; margin-bottom: 5px;">🎮💻</div>
+                    <h2 style="font-weight: 800;">MTBank Streamer</h2>
+                    <p style="opacity: 0.9;">Стань топ-стримером · прокачивай железо</p>
+                    <div class="level-progress" style="margin: 20px 0 10px;">
+                        <div class="progress-fill" id="levelProgressFill" style="width: 0%;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                        <span>Уровень <span id="homeLevel">1</span></span>
+                        <span id="nextLevelInfo">0/100 XP</span>
+                    </div>
+                </div>
+                <div class="click-area">
+                    <div class="main-click-btn" id="mainClickBtn">
+                        <span>💰</span>
+                        <span style="font-size: 20px;" id="clickValueLabel">+10</span>
+                    </div>
+                    <span class="click-hint">Тапни для доната</span>
+                </div>
+            </div>
+
+            <!-- Экран Play (игровой процесс) -->
+            <div id="screen-play" class="screen">
+                <div class="glass-panel">
+                    <div class="section-title"><span>🎮</span> Стрим-комната</div>
+                    <p style="margin-bottom: 20px;">Зарабатывай донаты и улучшай ПК</p>
+                    
+                    <div style="display: flex; justify-content: center; margin: 10px 0;">
+                        <div class="main-click-btn" id="playClickBtn" style="width: 140px; height: 140px; font-size: 20px;">
+                            <span>💻</span>
+                            <span id="clickValuePlay">+10</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>⚡ Доход за клик:</span>
+                            <span id="clickPowerStat">10</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+                            <span>⏳ Пассивный доход:</span>
+                            <span id="passiveIncomeStat">0 / сек</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Блок быстрой статистики -->
+                <div class="glass-panel">
+                    <div class="section-title"><span>📊</span> Статистика стримера</div>
+                    <div>Подписчики: <span id="subsCount">0</span></div>
+                    <div>Всего заработано: <span id="totalEarned">0</span> 💎</div>
+                </div>
+            </div>
+
+            <!-- Экран Магазин (вкладка Shop, доступна через таббар Friends? Переименуем логически) 
+                 Сделаем 4-й таб "Shop", но в таббаре было 5. Переименуем "Friends" в "Shop" -->
+            <div id="screen-shop" class="screen">
+                <div class="glass-panel">
+                    <div class="section-title"><span>🛒</span> Магазин апгрейдов</div>
+                    <div class="shop-grid" id="shopContainer">
+                        <!-- динамически заполняется JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Экран Задания (Earn) -->
+            <div id="screen-earn" class="screen">
+                <div class="glass-panel">
+                    <div class="section-title"><span>📋</span> Задания от МТБанка</div>
+                    <div id="tasksList">
+                        <!-- динамически -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Экран Профиль / О программе -->
+            <div id="screen-profile" class="screen">
+                <div class="glass-panel">
+                    <div class="section-title"><span>👤</span> Профиль стримера</div>
+                    <p>🆔 ID: <span id="userIdSpan">—</span></p>
+                    <p>📅 В игре: <span id="daysPlayed">1</span> день</p>
+                    <p>🏆 Достижения: скоро</p>
+                    <button class="task-reward" id="resetProgressBtn" style="margin-top: 20px; background: #333; color: white;">Сбросить прогресс</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Таббар (навигация) -->
+        <nav class="tabbar clickable">
+            <div class="tab active" data-tab="home">
+                <div class="tab-icon">🏠</div><div class="tab-text">Главная</div>
+            </div>
+            <div class="tab" data-tab="play">
+                <div class="tab-icon">🎮</div><div class="tab-text">Стрим</div>
+            </div>
+            <div class="tab" data-tab="shop">
+                <div class="tab-icon">🛒</div><div class="tab-text">Магазин</div>
+            </div>
+            <div class="tab" data-tab="earn">
+                <div class="tab-icon">💰</div><div class="tab-text">Задания</div>
+            </div>
+            <div class="tab" data-tab="profile">
+                <div class="tab-icon">ℹ️</div><div class="tab-text">Профиль</div>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        (function(){
+            "use strict";
+
+            // ---------- ИНИЦИАЛИЗАЦИЯ TELEGRAM ----------
+            const tg = window.Telegram.WebApp;
+            tg.expand();
+            tg.enableClosingConfirmation();
+            
+            // Адаптация цветовой схемы
+            document.documentElement.style.setProperty('--tg-theme-bg-color', tg.backgroundColor || '#0c0c0f');
+            document.documentElement.style.setProperty('--tg-theme-text-color', tg.textColor || '#ffffff');
+            
+            // Облачное хранилище
+            const cloudStorage = tg.CloudStorage;
+
+            // ---------- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ИГРЫ ----------
+            let balance = 0;
+            let level = 1;
+            let clickPower = 10;
+            let passiveIncome = 0;      // доход в секунду
+            let totalEarned = 0;
+            let subscribers = 0;
+            let xp = 0;
+            const XP_PER_LEVEL = 100;
+            
+            // Апгрейды (состояние)
+            let upgrades = {
+                betterMic: 0,       // уровень микрофона
+                gamingPC: 0,        // уровень ПК
+                rgbLights: 0,       // подсветка
+                chair: 0
+            };
+
+            // Задания (выполненные)
+            let completedTasks = {
+                task1: false,
+                task2: false,
+                task3: false
+            };
+
+            // UI элементы
+            const balanceSpan = document.getElementById('balanceDisplay');
+            const levelSpan = document.getElementById('levelDisplay');
+            const homeLevelSpan = document.getElementById('homeLevel');
+            const levelProgressFill = document.getElementById('levelProgressFill');
+            const nextLevelInfo = document.getElementById('nextLevelInfo');
+            const clickValueLabel = document.getElementById('clickValueLabel');
+            const clickValuePlay = document.getElementById('clickValuePlay');
+            const clickPowerStat = document.getElementById('clickPowerStat');
+            const passiveIncomeStat = document.getElementById('passiveIncomeStat');
+            const subsCountSpan = document.getElementById('subsCount');
+            const totalEarnedSpan = document.getElementById('totalEarned');
+            const userIdSpan = document.getElementById('userIdSpan');
+            
+            // Контейнеры
+            const shopContainer = document.getElementById('shopContainer');
+            const tasksList = document.getElementById('tasksList');
+
+            // ---------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ----------
+            function haptic(type = 'light') {
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred(type);
+            }
+
+            function showFloatingText(x, y, text) {
+                const div = document.createElement('div');
+                div.className = 'float-amount';
+                div.innerText = text;
+                div.style.left = x + 'px';
+                div.style.top = y + 'px';
+                document.body.appendChild(div);
+                setTimeout(() => div.remove(), 1000);
+            }
+
+            // Обновление всех UI показателей
+            function refreshUI() {
+                balanceSpan.innerText = balance;
+                levelSpan.innerText = level;
+                homeLevelSpan.innerText = level;
+                
+                const currentXP = xp % XP_PER_LEVEL;
+                const progressPercent = (currentXP / XP_PER_LEVEL) * 100;
+                levelProgressFill.style.width = progressPercent + '%';
+                nextLevelInfo.innerText = `${currentXP}/${XP_PER_LEVEL} XP`;
+                
+                clickValueLabel.innerText = `+${clickPower}`;
+                clickValuePlay.innerText = `+${clickPower}`;
+                clickPowerStat.innerText = clickPower;
+                passiveIncomeStat.innerText = `${passiveIncome} / сек`;
+                subsCountSpan.innerText = subscribers;
+                totalEarnedSpan.innerText = totalEarned;
+                
+                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                    userIdSpan.innerText = tg.initDataUnsafe.user.id || 'unknown';
+                } else {
+                    userIdSpan.innerText = 'guest';
+                }
+            }
+
+            // Добавление опыта
+            function addXP(amount) {
+                xp += amount;
+                const newLevel = Math.floor(xp / XP_PER_LEVEL) + 1;
+                if (newLevel > level) {
+                    level = newLevel;
+                    haptic('success');
+                }
+                refreshUI();
+            }
+
+            // Увеличение баланса
+            function addBalance(amount, source = 'click') {
+                balance += amount;
+                totalEarned += amount;
+                // Опыт даётся за каждые 10 монет
+                addXP(Math.floor(amount / 10));
+                
+                // Пассивные подписчики (имитация)
+                subscribers = Math.floor(totalEarned / 50);
+                
+                refreshUI();
+                saveToCloud();
+            }
+
+            // Пересчёт силы клика на основе апгрейдов
+            function recalcClickPower() {
+                clickPower = 10 + (upgrades.gamingPC * 5) + (upgrades.betterMic * 2) + (upgrades.rgbLights * 1);
+                if (upgrades.chair > 0) clickPower += 8 * upgrades.chair;
+            }
+
+            function recalcPassive() {
+                passiveIncome = (upgrades.gamingPC * 2) + (upgrades.rgbLights * 1);
+            }
+
+            // ---------- СОХРАНЕНИЕ / ЗАГРУЗКА В ОБЛАКЕ TG ----------
+            function saveToCloud() {
+                const gameState = {
+                    balance, level, clickPower, passiveIncome, totalEarned, subscribers, xp,
+                    upgrades, completedTasks
+                };
+                cloudStorage.setItem('mtbGameState', JSON.stringify(gameState));
+            }
+
+            function loadFromCloud() {
+                cloudStorage.getItem('mtbGameState', (err, value) => {
+                    if (!err && value) {
+                        try {
+                            const saved = JSON.parse(value);
+                            balance = saved.balance || 0;
+                            level = saved.level || 1;
+                            clickPower = saved.clickPower || 10;
+                            passiveIncome = saved.passiveIncome || 0;
+                            totalEarned = saved.totalEarned || 0;
+                            subscribers = saved.subscribers || 0;
+                            xp = saved.xp || 0;
+                            upgrades = saved.upgrades || { betterMic:0, gamingPC:0, rgbLights:0, chair:0 };
+                            completedTasks = saved.completedTasks || { task1: false, task2: false, task3: false };
+                            
+                            recalcClickPower();
+                            recalcPassive();
+                            refreshUI();
+                            renderShop();
+                            renderTasks();
+                        } catch(e) { console.warn('Parse error', e); }
+                    } else {
+                        // Начальные бонусы
+                        addBalance(50);
+                    }
+                    refreshUI();
+                });
+            }
+
+            // ---------- МАГАЗИН (ГЕНЕРАЦИЯ) ----------
+            const shopItems = [
+                { id: 'gamingPC', name: 'Игровой ПК', emoji: '🖥️', basePrice: 150, effect: '+5 к клику, +2 пасс.', max: 10 },
+                { id: 'betterMic', name: 'Микрофон', emoji: '🎤', basePrice: 80, effect: '+2 к клику', max: 15 },
+                { id: 'rgbLights', name: 'RGB подсветка', emoji: '💡', basePrice: 60, effect: '+1 клик, +1 пасс.', max: 20 },
+                { id: 'chair', name: 'Геймерское кресло', emoji: '🪑', basePrice: 300, effect: '+8 к клику', max: 5 }
+            ];
+
+            function getUpgradePrice(item, level) {
+                return Math.floor(item.basePrice * Math.pow(1.5, level));
+            }
+
+            function buyUpgrade(itemId) {
+                const item = shopItems.find(i => i.id === itemId);
+                const currentLvl = upgrades[itemId] || 0;
+                if (currentLvl >= item.max) { tg.showAlert('Максимальный уровень!'); return; }
+                const price = getUpgradePrice(item, currentLvl);
+                if (balance < price) { tg.showAlert('Недостаточно средств 💎'); return; }
+                
+                balance -= price;
+                upgrades[itemId] = currentLvl + 1;
+                recalcClickPower();
+                recalcPassive();
+                haptic('success');
+                addXP(5); // бонус опыта
+                refreshUI();
+                renderShop();
+                saveToCloud();
+                tg.showPopup({ title: 'Покупка', message: `${item.name} улучшен до уровня ${upgrades[itemId]}!` });
+            }
+
+            function renderShop() {
+                let html = '';
+                shopItems.forEach(item => {
+                    const lvl = upgrades[item.id] || 0;
+                    const price = getUpgradePrice(item, lvl);
+                    const maxed = lvl >= item.max;
+                    html += `<div class="upgrade-card" onclick="window.buyUpgrade('${item.id}')">
+                        <div class="upgrade-emoji">${item.emoji}</div>
+                        <div class="upgrade-name">${item.name} (${lvl}/${item.max})</div>
+                        <div class="upgrade-desc">${item.effect}</div>
+                        <div class="upgrade-price">${maxed ? 'MAX' : price + ' 💎'}</div>
+                    </div>`;
+                });
+                shopContainer.innerHTML = html;
+            }
+            window.buyUpgrade = buyUpgrade;
+
+            // ---------- ЗАДАНИЯ ----------
+            const tasksData = [
+                { id: 'task1', name: 'Подписка на канал', reward: 500, action: () => {
+                    tg.openTelegramLink('https://t.me/mtbank_belarus');
+                    setTimeout(() => completeTask('task1'), 2000); // имитация
+                }},
+                { id: 'task2', name: 'Пригласить друга', reward: 800, action: () => {
+                    tg.openLink('https://t.me/share/url?url=Играй%20со%20мной%20в%20MTBank%20Streamer!');
+                    completeTask('task2');
+                }},
+                { id: 'task3', name: 'Оформить карту', reward: 1500, action: () => {
+                    tg.openLink('https://www.mtbank.by/');
+                    completeTask('task3');
+                }}
+            ];
+
+            function completeTask(taskId) {
+                if (completedTasks[taskId]) return;
+                completedTasks[taskId] = true;
+                const task = tasksData.find(t => t.id === taskId);
+                addBalance(task.reward);
+                haptic('success');
+                renderTasks();
+                saveToCloud();
+                tg.showPopup({ message: `Задание выполнено! +${task.reward} 💎` });
+            }
+
+            function renderTasks() {
+                let html = '';
+                tasksData.forEach(task => {
+                    const done = completedTasks[task.id];
+                    html += `<div class="task-item">
+                        <div><strong>${task.name}</strong><br><span style="font-size:13px;">+${task.reward} 💎</span></div>
+                        <div class="task-reward" onclick="window.completeTask('${task.id}')" style="${done ? 'opacity:0.5;pointer-events:none;' : ''}">
+                            ${done ? '✅' : 'Выполнить'}
+                        </div>
+                    </div>`;
+                });
+                tasksList.innerHTML = html;
+            }
+            window.completeTask = completeTask;
+
+            // ---------- ПАССИВНЫЙ ДОХОД (интервал) ----------
+            setInterval(() => {
+                if (passiveIncome > 0) {
+                    addBalance(passiveIncome);
+                }
+            }, 1000);
+
+            // ---------- ОБРАБОТЧИКИ КЛИКОВ ----------
+            function handleClick(e) {
+                const btn = e.currentTarget;
+                const rect = btn.getBoundingClientRect();
+                const x = rect.left + rect.width/2;
+                const y = rect.top;
+                showFloatingText(x, y, `+${clickPower}`);
+                
+                addBalance(clickPower);
+                haptic('light');
+            }
+
+            // ---------- НАВИГАЦИЯ ----------
+            const tabs = document.querySelectorAll('.tab');
+            const screens = {
+                home: document.getElementById('screen-home'),
+                play: document.getElementById('screen-play'),
+                shop: document.getElementById('screen-shop'),
+                earn: document.getElementById('screen-earn'),
+                profile: document.getElementById('screen-profile')
+            };
+
+            function switchTab(tabId) {
+                // Скрыть все экраны
+                Object.values(screens).forEach(s => s.classList.remove('active'));
+                screens[tabId].classList.add('active');
+                
+                tabs.forEach(t => {
+                    t.classList.remove('active');
+                    if (t.dataset.tab === tabId) t.classList.add('active');
+                });
+                
+                // Настройка кнопки назад Telegram
+                if (tabId === 'home') {
+                    tg.BackButton.hide();
+                } else {
+                    tg.BackButton.show();
+                    tg.BackButton.onClick(() => switchTab('home'));
+                }
+                
+                haptic('light');
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+            });
+
+            // Быстрые кнопки
+            document.getElementById('quickShopBtn').addEventListener('click', () => switchTab('shop'));
+            document.getElementById('quickEarnBtn').addEventListener('click', () => switchTab('earn'));
+            
+            // Сброс прогресса
+            document.getElementById('resetProgressBtn').addEventListener('click', () => {
+                tg.showConfirm('Сбросить весь прогресс?', (ok) => {
+                    if(ok) {
+                        balance = 0; level = 1; xp = 0; totalEarned = 0; subscribers = 0;
+                        upgrades = { betterMic:0, gamingPC:0, rgbLights:0, chair:0 };
+                        completedTasks = { task1: false, task2: false, task3: false };
+                        recalcClickPower(); recalcPassive();
+                        refreshUI(); renderShop(); renderTasks();
+                        saveToCloud();
+                    }
+                });
+            });
+
+            // Настройка кнопок клика
+            document.getElementById('mainClickBtn').addEventListener('click', handleClick);
+            document.getElementById('playClickBtn').addEventListener('click', handleClick);
+
+            // Интеграция MainButton (можно использовать для покупок)
+            tg.MainButton.setText('Магазин').show().onClick(() => switchTab('shop'));
+
+            // ---------- СТАРТ ----------
+            function init() {
+                loadFromCloud();
+                renderShop();
+                renderTasks();
+                refreshUI();
+                
+                // Если первый запуск - приветствие
+                if (balance === 0) addBalance(100);
+            }
+
+            init();
+
+            // Регистрируем обработчик закрытия для сохранения
+            window.addEventListener('beforeunload', () => saveToCloud());
+            
+        })();
+    </script>
+</body>
+</html>
