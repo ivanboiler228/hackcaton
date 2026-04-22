@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MTBank Streamer Game</title>
+    <style>
+        /* =========================================
+           CSS: ДИЗАЙН И СТИЛИ (LIQUID GLASS)
+           ========================================= */
+        :root {
+            --bg-dark: #0a0a0a;
+            --accent: #ccff00; /* Салатовый цвет кнопок */
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Убираем выделение текста и скролл */
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: var(--bg-dark);
+            color: white; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden; user-select: none;
+        }
+
+        /* 3D фон */
+        #bg-iframe {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            border: none; z-index: 1;
+        }
+
+        /* Оболочка интерфейса поверх 3D */
+        .ui-wrapper {
+            position: relative; z-index: 2; height: 100vh;
+            display: flex; flex-direction: column; justify-content: space-between;
+            pointer-events: none; /* Пропускаем клики к 3D фону... */
+        }
+
+        /* ...но возвращаем кликабельность кнопкам и меню */
+        .clickable { pointer-events: auto; }
+
+        /* ВЕРХНЯЯ ПАНЕЛЬ С БАЛАНСОМ */
+        .header {
+            padding: 15px; display: flex; justify-content: space-between;
+        }
+        .stats { display: flex; gap: 10px; }
+        .badge {
+            background: var(--glass-bg); backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border); padding: 8px 15px;
+            border-radius: 20px; font-weight: bold; font-size: 14px;
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        /* БОКОВОЕ МЕНЮ (Магазин) */
+        .sidebar {
+            position: absolute; right: 15px; top: 80px;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .icon-btn {
+            background: var(--glass-bg); backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            width: 45px; height: 45px; border-radius: 12px;
+            color: white; font-size: 20px;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: transform 0.1s;
+        }
+        .icon-btn:active { transform: scale(0.9); }
+
+        /* ЭКРАНЫ ВКЛАДОК */
+        .screen {
+            flex-grow: 1; display: none; /* Скрыты по умолчанию */
+            background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(20px);
+            flex-direction: column; align-items: center; padding: 20px;
+            overflow-y: auto; text-align: center; pointer-events: auto;
+        }
+        /* Главный экран (Home) полностью прозрачный, чтобы было видно 3D */
+        #screen-home { background: transparent; backdrop-filter: none; pointer-events: none; }
+        .screen.active { display: flex; }
+
+        /* ГЛАВНАЯ КНОПКА (САЛАТОВАЯ) */
+        .main-action-btn {
+            background: var(--accent); color: black; border: none;
+            padding: 15px 40px; border-radius: 15px; font-weight: 800;
+            font-size: 18px; margin-top: 20px; cursor: pointer;
+            box-shadow: 0 0 15px rgba(204, 255, 0, 0.3); transition: 0.1s;
+        }
+        .main-action-btn:active { transform: scale(0.95); }
+
+        /* НИЖНЕЕ МЕНЮ (TABBAR) */
+        .tabbar {
+            background: rgba(15, 15, 15, 0.95); border-top: 1px solid #222;
+            display: grid; grid-template-columns: repeat(5, 1fr);
+            padding: 10px 0 20px 0;
+        }
+        .tab {
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            opacity: 0.4; cursor: pointer; transition: 0.2s;
+        }
+        .tab.active { opacity: 1; color: var(--accent); }
+        .tab-icon { font-size: 24px; }
+        .tab-text { font-size: 10px; font-weight: bold; }
+        
+        /* Стили для картинок, которые ты будешь вставлять */
+        .custom-image { width: 150px; border-radius: 20px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+
+    <iframe id="bg-iframe" src="https://rooms.xyz/vanya/demo"></iframe>
+
+    <div class="ui-wrapper">
+        
+        <header class="header clickable">
+            <div class="stats">
+                <div class="badge">💎 <span id="balanceDisplay">0</span></div>
+                <div class="badge">⭐ <span id="levelDisplay">1</span></div>
+            </div>
+            <div class="badge" style="border-radius: 50%; padding: 8px 10px;">📁</div>
+        </header>
+
+        <aside class="sidebar clickable" id="sidebar">
+            <div class="icon-btn" onclick="buyItem()">🛒</div>
+            <div class="icon-btn">📢</div>
+        </aside>
+
+        <div id="screen-home" class="screen active"></div>
+
+        <div id="screen-play" class="screen">
+            <h2>Заработок</h2>
+            <p>Кликай, чтобы заработать на прокачку компа</p>
+            
+            <button class="main-action-btn" id="clickBtn">Кликать! (+10 💎)</button>
+        </div>
+
+        <div id="screen-friends" class="screen">
+            <h2>Друзья</h2>
+            <p>Приглашай друзей и получай процент с их дохода</p>
+            
+            <button class="main-action-btn">Скопировать ссылку</button>
+        </div>
+
+        <div id="screen-earn" class="screen">
+            <h2>Задания МТБанка</h2>
+            <div class="badge" style="margin-bottom: 10px; width: 80%; justify-content: center;">
+                Оформить карту (+1000 💎)
+            </div>
+            <div class="badge" style="margin-bottom: 10px; width: 80%; justify-content: center;">
+                Подписка на канал (+500 💎)
+            </div>
+        </div>
+
+        <div id="screen-about" class="screen">
+            <h2>О профиле</h2>
+            <p>Ваш ID: 8493021</p>
+            <p>Статус: Новичок</p>
+        </div>
+
+        <nav class="tabbar clickable">
+            <div class="tab active" onclick="switchTab('home')">
+                <div class="tab-icon">🏠</div><div class="tab-text">Home</div>
+            </div>
+            <div class="tab" onclick="switchTab('play')">
+                <div class="tab-icon">🎮</div><div class="tab-text">Play</div>
+            </div>
+            <div class="tab" onclick="switchTab('friends')">
+                <div class="tab-icon">👥</div><div class="tab-text">Friends</div>
+            </div>
+            <div class="tab" onclick="switchTab('earn')">
+                <div class="tab-icon">💰</div><div class="tab-text">Earn</div>
+            </div>
+            <div class="tab" onclick="switchTab('about')">
+                <div class="tab-icon">ℹ️</div><div class="tab-text">About</div>
+            </div>
+        </nav>
+
+    </div>
+
+    <script>
+        // Игровые переменные
+        let balance = 0;
+        let level = 1;
+
+        // Элементы интерфейса
+        const balanceDisplay = document.getElementById('balanceDisplay');
+        const levelDisplay = document.getElementById('levelDisplay');
+        const clickBtn = document.getElementById('clickBtn');
+        const sidebar = document.getElementById('sidebar');
+
+        // Логика кликера
+        clickBtn.addEventListener('click', () => {
+            balance += 10;
+            balanceDisplay.innerText = balance;
+            triggerVibration(); // Вибрация телефона
+        });
+
+        // Тестовая покупка (Кнопка магазина)
+        function buyItem() {
+            if (balance >= 100) {
+                balance -= 100;
+                level += 1;
+                balanceDisplay.innerText = balance;
+                levelDisplay.innerText = level;
+                alert("Успешная покупка! Твой уровень вырос.");
+                // Тут в будущем можно отправлять сигнал в Rooms для смены 3D модели
+            } else {
+                alert("Не хватает денег! Нужно 100 💎. Иди кликай во вкладку Play.");
+            }
+        }
+
+        // Логика переключения вкладок
+        function switchTab(tabId) {
+            // Убираем активный класс со всех кнопок вкладок
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            // Скрываем все экраны
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+
+            // Добавляем активный класс нажатой кнопке (находим по событию клика)
+            event.currentTarget.classList.add('active');
+            
+            // Показываем нужный экран
+            document.getElementById('screen-' + tabId).classList.add('active');
+
+            // Если мы ушли с главного экрана (Home), скрываем сайдбар, чтобы не мешал
+            if (tabId === 'home') {
+                sidebar.style.display = 'flex';
+            } else {
+                sidebar.style.display = 'none';
+            }
+
+            triggerVibration();
+        }
+
+        // Функция вибрации (работает внутри Telegram Web App)
+        function triggerVibration() {
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        // Подгоняем приложение под экран Telegram
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.expand();
+        }
+    </script>
+</body>
+</html>
