@@ -1,0 +1,211 @@
+:root {
+    --mtb-blue: #003d7c;   /* Глубокий синий МТБанка */
+    --mtb-red: #e30613;    /* Яркий красный МТБанка */
+    --mtb-white: #ffffff;
+    --mtb-bg: #f4f7f9;     /* Светлый фон для контраста */
+    --mtb-glass: rgba(255, 255, 255, 0.2);
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #00254a; /* Темный фон за пределами телефона */
+    display: flex;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.phone-container {
+    width: 100%;
+    max-width: 480px;
+    background-color: var(--mtb-blue); /* Основной фон — синий */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(0,0,0,0.5);
+}
+
+/* ВЕРХНЯЯ ПАНЕЛЬ */
+.header {
+    background: linear-gradient(180deg, var(--mtb-red) 0%, #b3050f 100%);
+    padding: 12px 15px;
+    display: flex;
+    justify-content: space-around;
+    z-index: 10;
+    border-bottom: var(--mtb-white) solid 2px;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.status-item {
+    background: var(--mtb-white);
+    color: var(--mtb-blue);
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.status-item:hover {
+    transform: translateY(-2px);
+}
+
+/* ИГРОВАЯ ЗОНА */
+.game-area {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* Центрируем всё */
+    padding: 60px 0; /* Отступы для сайдбара и меню */
+}
+
+/* УВЕЛИЧЕННЫЙ КОНТЕЙНЕР КОМНАТЫ */
+.room-container {
+    width: 94%; /* Сделали шире (было 80%) */
+    height: 70%; /* Сделали выше (было 65%) */
+    background-color: var(--mtb-white);
+    border: 4px solid var(--mtb-red);
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.room-container:hover {
+    transform: scale(1.01); /* Легкое увеличение при наведении на комнату */
+}
+
+.room-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* ВЕРХНИЙ САЙДБАР (Инфо, Шоп, Почта) */
+.sidebar-right {
+    position: absolute;
+    top: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px); /* Эффект матового стекла */
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    padding: 10px 30px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 50px;
+    z-index: 5;
+}
+
+.side-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.side-icon {
+    width: 50px;
+    height: 50px;
+    background-color: var(--mtb-white);
+    border-radius: 50%; /* Круглые иконки смотрятся дороже */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.side-text {
+    color: var(--mtb-white);
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Эффекты для Сайдбара */
+.side-item:hover .side-icon {
+    transform: scale(1.2);
+    background-color: var(--mtb-red);
+    color: white;
+}
+
+/* НИЖНЯЯ НАВИГАЦИЯ */
+.bottom-nav {
+    background: linear-gradient(0deg, #b3050f 0%, var(--mtb-red) 100%);
+    display: flex;
+    justify-content: space-evenly;
+    padding: 15px 0px 30px 0px;
+    border-top: 3px solid var(--mtb-white);
+    border-top-right-radius: 35px;
+    border-top-left-radius: 35px;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    width: 18%;
+    transition: 0.3s;
+}
+
+.nav-icon {
+    width: 55px;
+    height: 55px;
+    background-color: var(--mtb-white);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 4px;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+.nav-text {
+    color: var(--mtb-white);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+/* Эффекты для навигации */
+.nav-item:hover .nav-icon {
+    transform: translateY(-10px); /* Кнопка подпрыгивает */
+    background-color: var(--mtb-blue);
+    color: white;
+}
+
+.nav-item:active .nav-icon {
+    transform: scale(0.9);
+}
+
+.active .nav-icon {
+    background-color: var(--mtb-blue);
+    color: white;
+    box-shadow: 0 0 15px rgba(255,255,255,0.5);
+    transform: translateY(-5px);
+}
