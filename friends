@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MTBank - Friends Database</title>
+    <style>
+        :root {
+            --mtb-blue: #003d7c;
+            --mtb-red: #e30613;
+            --mtb-white: #ffffff;
+            --mtb-bg: #f4f7f9;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #001a33;
+            display: flex; justify-content: center;
+            height: 100vh; overflow: hidden;
+        }
+
+        .phone-container {
+            width: 100%; max-width: 480px;
+            background-color: var(--mtb-bg);
+            height: 100%; display: flex;
+            flex-direction: column; position: relative;
+            border: 4px solid var(--mtb-blue);
+        }
+
+        /* HEADER */
+        .header {
+            background: var(--mtb-red);
+            padding: 10px; display: flex;
+            justify-content: space-around;
+            border-bottom: 4px solid var(--mtb-blue);
+        }
+
+        .status-item {
+            background: var(--mtb-white); color: var(--mtb-blue);
+            padding: 5px 10px; border: 2px solid var(--mtb-blue);
+            font-size: 14px; font-weight: bold;
+            box-shadow: 2px 2px 0px var(--mtb-blue);
+        }
+
+        /* КОНТЕНТ */
+        .friends-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sticky-title {
+            background: var(--mtb-blue);
+            color: white; padding: 10px;
+            text-align: center; font-weight: bold;
+            border: 3px solid black;
+            box-shadow: 4px 4px 0px var(--mtb-red);
+            margin-bottom: 25px;
+        }
+
+        /* СПИСОК ДРУЗЕЙ */
+        .friends-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .friend-card {
+            position: relative; /* ДЛЯ ПОЗИЦИОНИРОВАНИЯ ПОДСКАЗКИ */
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 3px solid var(--mtb-blue);
+            padding: 12px;
+            box-shadow: 4px 4px 0px var(--mtb-blue);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .friend-avatar {
+            width: 45px; height: 45px;
+            background: #ddd;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; margin-right: 15px;
+        }
+
+        .friend-main-info {
+            flex: 1;
+        }
+
+        .friend-name {
+            display: block; font-weight: 900; font-size: 22px;
+            color: var(--mtb-blue); text-transform: uppercase;
+        }
+
+        .friend-tokens {
+            font-weight: 900; font-size: 20px; color: var(--mtb-red);
+        }
+
+        /* ВСПЛЫВАЮЩАЯ ПОДСКАЗКА (TOOLTIP) */
+        .friend-tooltip {
+            position: absolute;
+            top: 100%; /* Появляется СНИЗУ карточки */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 95%; /* Чуть шире для удобства */
+            background: var(--mtb-blue);
+            color: white;
+            padding: 15px;
+            border: 3px solid black;
+            box-shadow: 6px 6px 0px var(--mtb-red);
+            z-index: 1000; /* Очень высокий индекс, чтобы быть над другими карточками */
+            
+            /* Скрываем по умолчанию */
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-top: 10px; /* Отступ от карточки */
+        }
+
+        /* Треугольник внизу подсказки */
+        .friend-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: 100%; /* Перемещаем на верхнюю грань подсказки */
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 10px solid black; /* Стрелка указывает ВВЕРХ */
+            border-top: none;
+        }
+
+        /* ЭФФЕКТ ПРИ НАВЕДЕНИИ */
+        .friend-card:hover {
+            z-index: 1100; /* Поднимаем саму карточку, чтобы подсказка была над всем остальным */
+            transform: scale(1.02);
+        }
+
+        .friend-card:hover .friend-tooltip {
+            opacity: 1;
+            visibility: visible;
+            top: 110%; /* Плавно опускается чуть ниже при появлении */
+        }
+
+        /* ИНФОРМАЦИЯ ВНУТРИ ПОДСКАЗКИ */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px; /* Увеличил, чтобы соответствовало твоему стилю */
+            margin-bottom: 8px;
+            border-bottom: 1px dashed rgba(255,255,255,0.4);
+            padding-bottom: 4px;
+        }
+        .info-label { font-weight: bold; opacity: 0.9; text-transform: uppercase; }
+        .info-val { font-weight: 900; color: #fff; }
+        .info-row:last-child { border: none; }
+
+        /* FOOTER NAV */
+        .bottom-nav {
+            background: var(--mtb-blue);
+            display: flex; justify-content: space-evenly;
+            padding: 10px 0 20px 0; border-top: 4px solid var(--mtb-red);
+        }
+        .nav-icon { font-size: 24px; color: white; opacity: 0.5; }
+        .nav-icon.active { opacity: 1; filter: drop-shadow(2px 2px 0px var(--mtb-red)); }
+
+        /* БЛОК ДЕЙСТВИЯ (НИЖНЯЯ ПАНЕЛЬ) */
+        .invite-action-box {
+            margin-top: 185px;
+            background: var(--mtb-blue);
+            padding: 15px 25px;
+            border: 4px solid var(--mtb-red);
+            z-index: 10; /* Чтобы быть поверх списка при скролле */
+        }
+
+        .referral-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2px dashed white;
+            padding: 8px 12px;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .ref-label { font-size: 10px; font-weight: bold; opacity: 0.8; }
+        .ref-bonus { font-size: 14px; font-weight: 900; color: #00ff00; } /* Зеленый акцент на награде */
+
+        /* СТИЛИ КНОПКИ (КОПИЯ С РЕЙТИНГА) */
+        .invite-btn {
+            display: block;
+            width: 100%;
+            background: var(--mtb-red);
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            padding: 15px;
+            font-weight: 900;
+            font-size: 18px; /* Чуть увеличил для жирности */
+            text-transform: uppercase;
+            border: 3px solid black;
+            box-shadow: 4px 4px 0px #000; /* Жесткая черная тень для ретро */
+            transition: 0.1s;
+        }
+
+        .invite-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px #000;
+            background-color: #af0712;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        <header class="header">
+            <div class="status-item">TOKENS: 1250</div>
+            <div class="status-item">FRIENDS: 04</div>
+        </header>
+
+        <main class="friends-content">
+            <div class="sticky-title">-- FRIENDS_DATABASE --</div>
+
+            <div class="friends-list">
+
+                <!-- Друг 1 -->
+                <div class="friend-card">
+                    <div class="friend-avatar">🐱</div>
+                    <div class="friend-main-info">
+                        <span class="friend-name">АРТЕМ МИХАЛЫЧ</span>
+                        <span class="friend-tokens">44 000 🪙</span>
+                    </div>
+                    
+                    <!-- ПОДСКАЗКА -->
+                    <div class="friend-tooltip">
+                        <div class="info-row"><span class="info-label">В ИГРЕ:</span><span class="info-val">14 ДН.</span></div>
+                        <div class="info-row"><span class="info-label">РЕЙТИНГ:</span><span class="info-val">#05</span></div>
+                        <div class="info-row"><span class="info-label">ОНЛАЙН:</span><span class="info-val" style="color:#00ff00">ONLINE</span></div>
+                        <div class="info-row"><span class="info-label">КАРТА:</span><span class="info-val">MTB_X_LEVEL</span></div>
+                    </div>
+                </div>
+
+                <!-- Друг 2 -->
+                <div class="friend-card">
+                    <div class="friend-avatar">🦊</div>
+                    <div class="friend-main-info">
+                        <span class="friend-name">МАРИЯ ПЕТРОВА</span>
+                        <span class="friend-tokens">39 900 🪙</span>
+                    </div>
+                    
+                    <div class="friend-tooltip">
+                        <div class="info-row"><span class="info-label">В ИГРЕ:</span><span class="info-val">30 ДН.</span></div>
+                        <div class="info-row"><span class="info-label">РЕЙТИНГ:</span><span class="info-val">#06</span></div>
+                        <div class="info-row"><span class="info-label">ОНЛАЙН:</span><span class="info-val">2 ЧАСА НАЗАД</span></div>
+                        <div class="info-row"><span class="info-label">КАРТА:</span><span class="info-val">MTB_HALVA</span></div>
+                    </div>
+                </div>
+
+                <!-- Друг 3 -->
+                <div class="friend-card">
+                    <div class="friend-avatar">🐯</div>
+                    <div class="friend-main-info">
+                        <span class="friend-name">НИКИТА ЖУК</span>
+                        <span class="friend-tokens">32 500 🪙</span>
+                    </div>
+                    
+                    <div class="friend-tooltip">
+                        <div class="info-row"><span class="info-label">В ИГРЕ:</span><span class="info-val">5 ДН.</span></div>
+                        <div class="info-row"><span class="info-label">РЕЙТИНГ:</span><span class="info-val">#07</span></div>
+                        <div class="info-row"><span class="info-label">ОНЛАЙН:</span><span class="info-val">12 МИН НАЗАД</span></div>
+                        <div class="info-row"><span class="info-label">КАРТА:</span><span class="info-val">MTB_PAY_GO</span></div>
+                    </div>
+                </div>
+
+                <!-- Друг 4 -->
+                <div class="friend-card">
+                    <div class="friend-avatar">🐻</div>
+                    <div class="friend-main-info">
+                        <span class="friend-name">ЕЛЕНА ВАЙТ</span>
+                        <span class="friend-tokens">8 100 🪙</span>
+                    </div>
+                    
+                    <div class="friend-tooltip">
+                        <div class="info-row"><span class="info-label">В ИГРЕ:</span><span class="info-val">60 ДН.</span></div>
+                        <div class="info-row"><span class="info-label">РЕЙТИНГ:</span><span class="info-val">#807</span></div>
+                        <div class="info-row"><span class="info-label">ОНЛАЙН:</span><span class="info-val">ВЧЕРА</span></div>
+                        <div class="info-row"><span class="info-label">КАРТА:</span><span class="info-val">MTB_VISA_PREMIUM</span></div>
+                    </div>
+                </div>
+
+            </div>
+            <!-- инвайты -->
+            <section class="invite-action-box">
+                <div class="referral-info">
+                    <span class="ref-label">ВАША_НАГРАДА:</span>
+                    <span class="ref-bonus">+100 💎 ЗА ДРУГА</span>
+                </div>
+                
+                <a href="https://t.me/share/url?url=t.me/MTB_Game_Bot?start=ref123&text=Бро, залетай в игру от МТБанка! Прокачивай хату и получай бонусы! 🚀" class="invite-btn">
+                    ПРИГЛАСИТЬ ДРУГА!
+                </a>
+            </section>
+        </main>
+
+        <!-- FOOTER NAV -->
+        <nav class="bottom-nav">
+            <a href="../main/index.html" class="nav-item"><div class="nav-icon">🏠</div></a>
+            <a href="../game/game.html" class="nav-item"><div class="nav-icon">🎲</div></a>
+            <a href="../top/top.html" class="nav-item"><div class="nav-icon">🏆</div></a>
+            <a href="#" class="nav-item"><div class="nav-icon active">👥</div></a>
+            <a href="../stonks/stonks.html" class="nav-item"><div class="nav-icon">📈</div></a>
+        </nav>
+    </div>
+
+</body>
+</html>
