@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MTBank Retro Super App</title>
+    
+    <style>
+        :root {
+            --mtb-blue: #003d7c;
+            --mtb-red: #e30613;
+            --mtb-white: #ffffff;
+            --mtb-bg: #f4f7f9;
+            --retro-shadow: 4px 4px 0px var(--mtb-blue);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Courier New', Courier, monospace; /* Ретро-шрифт */
+            background-color: #001a33; 
+            display: flex; justify-content: center;
+            height: 100vh; overflow: hidden;
+        }
+
+        .phone-container {
+            width: 100%; max-width: 480px;
+            background-color: var(--mtb-bg);
+            height: 100%; display: flex;
+            flex-direction: column; position: relative;
+            border: 4px solid var(--mtb-blue);
+        }
+
+        /* HEADER */
+        .header {
+            background: var(--mtb-red);
+            padding: 10px; display: flex;
+            justify-content: space-around; z-index: 1000;
+            border-bottom: 4px solid var(--mtb-blue);
+        }
+
+        .status-item {
+            background: var(--mtb-white); color: var(--mtb-blue);
+            padding: 5px 10px; border: 2px solid var(--mtb-blue);
+            font-size: 14px; font-weight: bold;
+            box-shadow: 2px 2px 0px var(--mtb-blue);
+        }
+
+        /* СКРОЛЛ-ЗОНА */
+        .main-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        
+
+        .room-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%; height: 350px;
+        }
+        .room-container iframe { width: 100%; height: 100%; border: none; }
+
+        /* САЙДБАР ТРАНСФОРМЕР */
+        .sidebar-right {
+            position: fixed; right: 15px; top: 50%;
+            transform: translateY(-50%);
+            display: flex; flex-direction: column; gap: 10px;
+            z-index: 500; transition: all 0.4s steps(4); /* Шаговая анимация для ретро-эффекта */
+        }
+
+        .side-item {
+            background: white; border: 3px solid var(--mtb-blue);
+            width: 50px; height: 50px; border-radius: 0; /* Квадратные кнопки */
+            display: flex; align-items: center; justify-content: center;
+            text-decoration: none; font-size: 20px;
+            box-shadow: 4px 4px 0px var(--mtb-blue);
+        }
+
+        .side-item:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px var(--mtb-blue); }
+
+        .side-text { display: block; font-size: 8px; font-weight: bold; position: absolute; bottom: -12px; color: var(--mtb-blue); }
+
+        /* Компактный режим сайдбара */
+        .sidebar-right.compact { top: 120px; transform: translateY(0); }
+        .sidebar-right.compact .hide-on-scroll { display: none; }
+
+        /* STICKY ЗАГОЛОВКИ */
+        .sticky-title {
+            position: sticky; top: -1px;
+            background: var(--mtb-blue); color: white;
+            padding: 10px; font-size: 20px; font-weight: bold;
+            border-top: 4px solid var(--mtb-red);
+            z-index: 900; text-align: center;
+            margin-top: 5px;
+        }
+
+        /* МАГАЗИН: СЕТКА ТОВАРОВ */
+        .shop-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 15px; padding: 20px; background: #ddd;
+        }
+
+        .shop-item {
+            background: white; border: 3px solid var(--mtb-blue);
+            padding: 10px; display: flex; flex-direction: column;
+            align-items: center; box-shadow: 4px 4px 0px #888;
+        }
+
+        .item-img { font-size: 40px; margin-bottom: 10px; }
+        .item-name { justify-content: center; font-size: 12px; font-weight: bold; text-align: center; height: 30px; }
+        .item-price { color: var(--mtb-red); font-weight: 900; margin-bottom: 10px; }
+
+        .buy-btn {
+            width: 100%; background: var(--mtb-blue); color: white;
+            border: none; padding: 8px; font-family: inherit;
+            font-weight: bold; cursor: pointer; border: 2px solid black;
+        }
+
+        /* Недоступный товар */
+        .shop-item.locked { opacity: 0.6; filter: grayscale(1); }
+        .shop-item.locked .buy-btn { background: #666; cursor: not-allowed; }
+
+        
+
+    /* Стили уровня */
+    .level-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .lvl-label { font-weight: bold; font-size: 18px; padding: 10px 20px; }
+    .lvl-num { 
+        font-size: 24px; 
+        background: var(--mtb-blue); 
+        color: white; 
+        padding: 0 10px;
+    }
+
+    .xp-container {
+        height: 20px;
+        background: #eee;
+        border: 2px solid var(--mtb-blue);
+        position: relative;
+        overflow: hidden;
+    }
+    .xp-bar {
+        height: 100%;
+        background: var(--mtb-red);
+        border-right: 2px solid var(--mtb-blue);
+    }
+
+    .xp-details {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 15px;
+        font-weight: bold;
+        padding: 13px 10px;
+    }
+
+    /* Тренды (Стрелочки) */
+    .trend { font-size: 15px; margin-top: 5px; font-weight: bold; }
+    .trend.up { color: green; }
+    .trend.down { color: var(--mtb-red); }
+
+    /* История логов */
+    .history-header {
+        background: var(--mtb-blue);
+        color: white;
+        padding: 5px;
+        font-size: 12px;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    .history-scroll {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .history-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 15px;
+        padding: 8px 0;
+        border-bottom: 1px dashed var(--mtb-blue);
+    }
+
+    .h-date { color: #888; width: 40px; margin-left: 10px;}
+    .h-name { font-size: 15px; flex: 1; text-transform: uppercase; padding: 0 5px; margin:0 10px; }
+    .h-price { font-weight: bold; }
+    .h-price.plus { color: green; }
+    .h-price.minus { color: var(--mtb-red); }
+    .h-price.bank { color: var(--mtb-blue); }
+
+    /* Анимация мигания текста */
+    .blink-text {
+        animation: blink 1s steps(2) infinite;
+    }
+    @keyframes blink {
+        from { visibility: visible; }
+        to { visibility: hidden; }
+    }
+
+    .finance-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 20px;
+        padding: 10px 10px;
+    }
+        /* FOOTER */
+        .bottom-nav {
+            background: var(--mtb-blue); border-top: 4px solid var(--mtb-red);
+            display: flex; justify-content: space-evenly; padding: 10px 0 20px 0;
+        }
+        .nav-icon { font-size: 24px; color: white;  }
+        
+
+        /* ПОЧТА */
+        /* СТИЛИ ДЛЯ РЕТРО-ПОЧТЫ */
+
+.section-mail {
+    padding: 20px;
+    background: var(--mtb-bg);
+}
+
+.email-profile {
+    background: var(--mtb-blue);
+    color: white;
+    padding: 15px;
+    border: 3px solid black;
+    box-shadow: 6px 6px 0px var(--mtb-red);
+    margin-bottom: 25px;
+}
+
+.email-profile label {
+    font-size: 9px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    opacity: 0.8;
+}
+
+.email-profile .email-val {
+    font-size: 16px;
+    font-weight: 900;
+    margin-top: 5px;
+    word-break: break-all;
+}
+
+/* Карточки писем */
+.mail-card {
+    background: white;
+    border: 3px solid var(--mtb-blue);
+    padding: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    box-shadow: 4px 4px 0px var(--mtb-blue);
+    position: relative;
+    transition: 0.1s;
+}
+
+.mail-card.unread {
+    border-left: 10px solid var(--mtb-red); /* Акцент на непрочитанном */
+}
+
+.mail-card:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--mtb-blue);
+}
+
+.mail-icon {
+    font-size: 24px;
+    filter: drop-shadow(2px 2px 0px #eee);
+}
+
+.mail-text {
+    flex: 1;
+}
+
+.mail-title {
+    display: block;
+    font-weight: 900;
+    font-size: 13px;
+    color: var(--mtb-blue);
+    margin-bottom: 3px;
+    text-transform: uppercase;
+}
+
+.mail-desc {
+    display: block;
+    font-size: 10px;
+    color: #444;
+    line-height: 1.2;
+}
+
+.mail-time {
+    font-size: 9px;
+    font-weight: bold;
+    color: #888;
+    align-self: flex-start;
+}
+
+/* Переиспользуем заголовок из Инфо для единства стиля */
+.history-header {
+    background: var(--mtb-blue);
+    color: white;
+    padding: 10px;
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
+    border-top: 4px solid #e30613;
+}
+
+.fin-card{
+    text-align: center;
+}
+/* СЕКЦИЯ: ДОМ */
+        .section-home {
+            min-height: 50vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 20px;
+        }
+
+.room_img{
+    display: flex;
+    object-fit:contain;
+    width: 100%;
+    height: auto;
+}
+
+.item-imgage{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.cactus-image{
+    width: 50%;
+    padding: 0 0 10px 0;
+}
+
+
+
+.shop-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8); justify-content: center; align-items: center; z-index: 2000;
+}
+
+.shop-modal-content {
+    background: white; width: 85%; max-width: 380px; padding: 25px;
+    border: 4px solid var(--mtb-blue); box-shadow: 8px 8px 0px var(--mtb-red);
+    text-align: center; position: relative; font-family: 'Courier New', monospace;
+}
+
+.close-modal-btn {
+    position: absolute; top: 10px; right: 10px; background: none;
+    border: none; font-weight: bold; cursor: pointer; color: var(--mtb-red);
+}
+
+#modal-item-name { color: var(--mtb-blue); font-size: 20px; margin-bottom: 10px; }
+#modal-item-desc { font-size: 13px; color: #333; margin-bottom: 20px; line-height: 1.4; }
+
+.modal-price-row {
+    display: flex; justify-content: space-between;
+    padding: 10px; border-top: 2px dashed var(--mtb-blue);
+    border-bottom: 2px dashed var(--mtb-blue); margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.buy-confirm-btn {
+    width: 100%; background: var(--mtb-blue); color: white;
+    border: 3px solid black; padding: 15px; font-weight: 900;
+    cursor: pointer; box-shadow: 4px 4px 0px var(--mtb-red);
+}
+
+.karta-image{
+    width: 88%;
+}
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        <header class="header">
+            <div class="status-item">TOKENS: 1250</div>
+            <div class="status-item">LVL: 05</div>
+        </header>
+
+        <main class="main-scroll-area" id="scrollArea">
+            
+            
+
+            <section id="home" class="section-home">
+                <div class="room-container">
+                    <!-- Добавили id="roomImage" -->
+                    <img id="roomImage" class="room_img" src="empty.png" alt="Наша комната">
+                </div>
+            </section>
+
+            <!-- МАЯЧОК ИНФО -->
+            <div id="info" class="sticky-title">ЛИЧНАЯ_ИНФОРМАЦИЯ</div>
+
+            <section class="section-info">
+    
+    <!-- БЛОК УРОВНЯ И ПРОГРЕССИИ -->
+    <div class="retro-box level-section">
+        <div class="level-header">
+            <span class="lvl-label">ТЕКУЩИЙ_УРОВЕНЬ:</span>
+            <span class="lvl-num">05</span>
+        </div>
+        
+        <!-- Полоска опыта (XP) -->
+        <div class="xp-container">
+            <div class="xp-bar" style="width: 75%;"></div> <!-- 75% заполнено -->
+        </div>
+        
+        <div class="xp-details">
+            <span>ПРОГРЕСС: 8750 / 10000</span>
+            <span class="blink-text">ОСТАЛОСЬ: 1250 TOKENS</span>
+        </div>
+    </div>
+
+    <!-- БЛОК БАЛАНСА С ТРЕНДАМИ -->
+    <div class="finance-grid">
+        <div class="fin-card">
+            <label>БАЛАНС КАРТЫ</label>
+            <div class="amount">425.50 BYN</div>
+            <div class="trend down">-12% (МЕСЯЦ)</div>
+        </div>
+        <div class="fin-card" style="border-color: var(--mtb-red);">
+            <label>ИГРОВОЙ БАЛАНС</label>
+            <div class="amount">1250 🪙</div>
+            <div class="trend up">+40% (НЕДЕЛЯ)</div>
+        </div>
+    </div>
+
+    <!-- ИСТОРИЯ ПОКУПОК И ОПЕРАЦИЙ -->
+    <div class="retro-box history-section">
+        <div class="history-header">ИСТОРИЯ_ЛОГОВ:</div>
+        
+        <div class="history-scroll">
+            <!-- Строка 1 -->
+            <div class="history-row">
+                <span class="h-date">12.05 </span>
+                <span class="h-name">КУПЛЕН_ДИВАН_РЕТРО</span>
+                <span class="h-price minus">-500 🪙</span>
+            </div>
+            
+            <!-- Строка 2 -->
+            <div class="history-row">
+                <span class="h-date">11.05 </span>
+                <span class="h-name">КЭШБЭК_ЗА_КОФЕ</span>
+                <span class="h-price plus">+50 🪙</span>
+            </div>
+
+            <!-- Строка 3 -->
+            <div class="history-row">
+                <span class="h-date">10.05 </span>
+                <span class="h-name"> MTB_ТРАНЗАКЦИЯ:_VARKA</span>
+                <span class="h-price bank">-4.50 BYN</span>
+            </div>
+
+            <!-- Строка 4 -->
+            <div class="history-row">
+                <span class="h-date">09.05 </span>
+                <span class="h-name">ВЫИГРЫШ_В_КУБИКИ</span>
+                <span class="h-price plus">+150 🪙</span>
+            </div>
+            
+            <!-- Строка 5 -->
+            <div class="history-row">
+                <span class="h-date">08.05</span>
+                <span class="h-name">ПОКУПКА:_МАГАЗИН_Х</span>
+                <span class="h-price bank">-12.80 BYN</span>
+            </div>
+        </div>
+    </div>
+
+            <!-- МАЯЧОК МАГАЗИН -->
+            <div id="shop" class="sticky-title">-- МАГАЗИН ПРИКОЛЮХ --</div>
+            <section class="shop-grid">
+                <!-- Товар 1: Доступен -->
+                
+                <div class="shop-item">
+                    <div class="item-imgage">
+                        <img class="cactus-image" src="cactus01.png" alt="золотой_кактус">
+                    </div>
+                    <div class="item-name">ЗОЛОТОЙ_КАКТУС</div>
+                    <div class="item-price">500 🪙</div>
+                    <!-- Добавили связь с функцией -->
+                    <button class="buy-btn" onclick="openShopModal('cactus')">КУПИТЬ</button>
+                </div>
+
+                <div class="shop-item">
+                    <div class="item-img">
+                        <div class="item-imgage">
+                            <img class="karta-image" src="karta.png" alt="карта">
+                        </div>
+                    </div>
+                    <div class="item-name">КАРТА</div>
+                    <div class="item-price">600 🪙</div>
+                    <!-- Добавляем ID товара 'map' -->
+                    <button class="buy-btn" onclick="openShopModal('map')">КУПИТЬ</button>
+                </div>
+
+                <!-- Товар 3: Недоступен (Дорого) -->
+
+                <div class="shop-item locked">
+                    <div class="item-img">🛋️</div>
+                    <div class="item-name">РЕТРО_ДИВАН</div>
+                    <div class="item-price">5000 🪙</div>
+                    <button class="buy-btn">LOCKED</button>
+                </div>
+
+                <div class="shop-item locked">
+                    <div class="item-img">💡</div>
+                    <div class="item-name">ЛАМПА</div>
+                    <div class="item-price">5000 🪙</div>
+                    <button class="buy-btn">LOCKED</button>
+                </div>
+
+                <div class="shop-item locked">
+                    <div class="item-img">🍬</div>
+                    <div class="item-name">КАРТА_ХАЛВА</div>
+                    <div class="item-price">5000 🪙</div>
+                    <button class="buy-btn">LOCKED</button>
+                </div>
+
+                <div class="shop-item locked">
+                    <div class="item-img">📺</div>
+                    <div class="item-name">ЛАМПОВЫЙ_ТВ</div>
+                    <div class="item-price">5000 🪙</div>
+                    <button class="buy-btn">LOCKED</button>
+                </div>
+
+                <!-- Товар 4: Недоступен (Дорого) -->
+                <div class="shop-item locked">
+                    <div class="item-img">🤖</div>
+                    <div class="item-name">MTБ-РОБОТ</div>
+                    <div class="item-price">9999 🪙</div>
+                    <button class="buy-btn">LOCKED</button>
+                </div>
+            </section>
+
+            <div style="height: 100px;"></div>
+
+            <!-- МАЯЧОК ПОЧТА -->
+    <div id="mail" class="sticky-title">-- ЦЕНТР УВЕДОМЛЕНИЙ --</div>
+
+    <section class="section-mail">
+    <!-- Профиль почты в ретро-стиле -->
+    <div class="retro-box email-profile">
+        <label>SYSTEM_ACCESS_POINT (EMAIL):</label>
+        <div class="email-val">USER_MTB_2025@GMAIL.COM</div>
+    </div>
+
+    <div class="mail-list">
+        <div class="history-header">ВХОДЯЩИЕ_СООБЩЕНИЯ:</div>
+
+        <!-- Письмо 1 (Новое/Важное) -->
+        <div class="mail-card unread">
+            <div class="mail-icon">🎁</div>
+            <div class="mail-text">
+                <span class="mail-title">КЭШБЭК_ПОДТВЕРЖДЕН</span>
+                <span class="mail-desc">Система начислила +50 🪙 за транзакцию в категории "КОФЕ".</span>
+            </div>
+            <div class="mail-time">10:45</div>
+        </div>
+
+        <!-- Письмо 2 -->
+        <div class="mail-card">
+            <div class="mail-icon">💳</div>
+            <div class="mail-text">
+                <span class="mail-title">ОБНОВЛЕНИЕ_ЛИМИТОВ</span>
+                <span class="mail-desc">Карта Халва: доступны новые условия рассрочки. Проверьте личный кабинет.</span>
+            </div>
+            <div class="mail-time">ВЧЕРА</div>
+        </div>
+
+        <!-- Письмо 3 -->
+        <div class="mail-card">
+            <div class="mail-icon">🏠</div>
+            <div class="mail-text">
+                <span class="mail-title">ОТЧЕТ_О_РЕМОНТЕ</span>
+                <span class="mail-desc">Новые объекты из Магазина успешно интегрированы в Убежище.</span>
+            </div>
+            <div class="mail-time">2 ДН.</div>
+        </div>
+    </div>
+    </section>
+        </main>
+
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item"><div class="nav-icon">🏠</div></a>
+            <a href="../game/game.html" class="nav-item"><div class="nav-icon">🎲</div></a>
+            <a href="#" class="nav-item"><div class="nav-icon">🏆</div></a>
+            <a href="#" class="nav-item"><div class="nav-icon">👥</div></a>
+            <a href="#" class="nav-item"><div class="nav-icon">📈</div></a>
+        </nav>
+    </div>
+
+
+
+    
+    <!-- Модальное окно информации о товаре -->
+
+
+        <div id="shop-modal" class="shop-modal-overlay" style="display: none;">
+            <div class="shop-modal-content">
+                <button class="close-modal-btn" onclick="closeShopModal()">[X]</button>
+                
+                <div id="modal-item-img-container" style="margin-bottom: 15px;">
+                    <img id="modal-item-pic" src="" alt="" style="width: 100px; height: auto; border: 2px solid var(--mtb-blue);">
+                </div>
+                
+                <h2 id="modal-item-name">НАЗВАНИЕ ТОВАРА</h2>
+                <p id="modal-item-desc">Описание будет здесь...</p>
+                
+                <div class="modal-price-row">
+                    <span>СТОИМОСТЬ:</span>
+                    <span id="modal-item-price">0 🪙</span>
+                </div>
+
+                <button class="buy-confirm-btn" onclick="confirmPurchase()">ПОКУПАЮ!</button>
+            </div>
+        </div>
+    
+    <script>
+        
+
+// 1. Создаем переменную, чтобы помнить, какой товар сейчас в модалке
+let currentProduct = "";
+
+// 2. База данных товаров
+const shopData = {
+    'cactus': {
+        name: "ЗОЛОТОЙ КАКТУС",
+        desc: "Эксклюзивный декор. Приносит удачу и символизирует рост активов!",
+        price: "500 🪙",
+        image: "cactus01.png",
+        roomImg: "roomandcactus.png" // Картинка комнаты с кактусом
+    },
+    'map': {
+        name: "КАРТА МИРА",
+        desc: "Древний артефакт путешественника. Открывает новые горизонты планирования бюджета!",
+        price: "600 🪙",
+        image: "karta.png",
+        roomImg: "roomandkarta.png" // Картинка комнаты с картой на стене
+    }
+};
+
+// 3. Функция открытия окна (универсальная)
+function openShopModal(itemId) {
+    const item = shopData[itemId];
+    if (item) {
+        currentProduct = itemId; // Запоминаем, что мы выбрали (cactus или map)
+        
+        document.getElementById('modal-item-name').innerText = item.name;
+        document.getElementById('modal-item-desc').innerText = item.desc;
+        document.getElementById('modal-item-price').innerText = item.price;
+        document.getElementById('modal-item-pic').src = item.image;
+        
+        document.getElementById('shop-modal').style.display = 'flex';
+    }
+}
+
+// 4. Функция покупки (универсальная)
+function confirmPurchase() {
+    const roomImg = document.getElementById('roomImage');
+    const item = shopData[currentProduct];
+
+    if (item) {
+        // Меняем комнату на ту, которая привязана к этому товару
+        roomImg.src = item.roomImg;
+        
+        alert("УСПЕХ! Товар «" + item.name + "» установлен в ваш дом!.");
+    }
+
+    closeShopModal();
+}
+
+function closeShopModal() {
+    document.getElementById('shop-modal').style.display = 'none';
+}
+    </script>
+</body>
+</html>
