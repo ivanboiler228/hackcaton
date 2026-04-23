@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MTBank - Market Data</title>
+    <style>
+        :root {
+            --mtb-blue: #003d7c;
+            --mtb-red: #e30613;
+            --mtb-white: #ffffff;
+            --mtb-bg: #f4f7f9;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #001a33;
+            display: flex; justify-content: center;
+            height: 100vh; overflow: hidden;
+        }
+
+        .phone-container {
+            width: 100%; max-width: 480px;
+            background-color: var(--mtb-bg);
+            height: 100%; display: flex;
+            flex-direction: column; position: relative;
+            border: 4px solid var(--mtb-blue);
+        }
+
+        /* HEADER */
+        .header {
+            background: var(--mtb-red);
+            padding: 10px; display: flex;
+            justify-content: space-around;
+            border-bottom: 4px solid var(--mtb-blue);
+        }
+
+        .status-item {
+            background: var(--mtb-white); color: var(--mtb-blue);
+            padding: 5px 10px; border: 2px solid var(--mtb-blue);
+            font-size: 14px; font-weight: bold;
+            box-shadow: 2px 2px 0px var(--mtb-blue);
+        }
+
+        /* КОНТЕНТ */
+        .market-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sticky-title {
+            background: var(--mtb-blue);
+            color: white; padding: 10px;
+            text-align: center; font-weight: bold;
+            border: 3px solid black;
+            box-shadow: 4px 4px 0px var(--mtb-red);
+            margin-bottom: 25px;
+        }
+
+        /* ТАБЛИЦА КУРСОВ */
+        .retro-table {
+            width: 100%;
+            background: white;
+            border: 3px solid var(--mtb-blue);
+            box-shadow: 6px 6px 0px var(--mtb-blue);
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        .retro-table th {
+            background: var(--mtb-blue);
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-size: 12px;
+        }
+
+        .retro-table td {
+            padding: 15px 10px;
+            border-bottom: 1px dashed var(--mtb-blue);
+            font-weight: 900;
+            font-size: 16px;
+        }
+
+        .currency-name { color: var(--mtb-blue); }
+        .currency-val { color: var(--mtb-red); text-align: right; }
+
+        /* ИНДИКАТОР ОБНОВЛЕНИЯ */
+        .update-tag {
+            font-size: 10px;
+            text-align: center;
+            color: var(--mtb-blue);
+            margin-top: -15px;
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+
+        /* КАРТОЧКА АКЦИЙ МТБ (ДЕМО) */
+        .stock-card {
+            background: var(--mtb-blue);
+            color: white;
+            padding: 20px;
+            border: 3px solid black;
+            box-shadow: 6px 6px 0px var(--mtb-red);
+        }
+
+        .stock-title { font-size: 14px; margin-bottom: 10px; display: block; opacity: 0.8; }
+        .stock-price { font-size: 28px; font-weight: 900; }
+        .stock-trend { color: #00ff00; font-size: 12px; margin-top: 5px; }
+
+        /* FOOTER NAV */
+        .bottom-nav {
+            background: var(--mtb-blue);
+            display: flex; justify-content: space-evenly;
+            padding: 10px 0 20px 0; border-top: 4px solid var(--mtb-red);
+        }
+        .nav-icon { font-size: 24px; color: white; opacity: 0.5; }
+        .nav-icon.active { opacity: 1; filter: drop-shadow(2px 2px 0px var(--mtb-red)); }
+
+        /* Анимация загрузки */
+        .loading { color: var(--mtb-red); font-weight: bold; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        <header class="header">
+            <div class="status-item">BYN_MARKET</div>
+            <div class="status-item">LIVE_DATA</div>
+        </header>
+
+        <main class="market-content">
+            <div class="sticky-title">-- EXCHANGE_RATES_NBRB --</div>
+
+            <table class="retro-table">
+                <thead>
+                    <tr>
+                        <th>ВАЛЮТА</th>
+                        <th style="text-align: right;">КУРС_НБРБ</th>
+                    </tr>
+                </thead>
+                <tbody id="rates-table">
+                    <tr>
+                        <td colspan="2" class="loading" style="text-align: center;">ПОДКЛЮЧЕНИЕ К ШЛЮЗУ...</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="update-tag" id="update-time">ОЖИДАНИЕ ДАННЫХ...</div>
+
+            <div class="sticky-title">-- MTB_STOCK_INDEX --</div>
+            
+            <div class="stock-card">
+                <span class="stock-title">АКЦИИ МТБАНК (MTB)</span>
+                <div class="stock-price">145.20 🪙</div>
+                <div class="stock-trend">↑ +2.4% ЗА СЕГОДНЯ</div>
+            </div>
+        </main>
+
+        <nav class="bottom-nav">
+            <a href="../main/index.html" class="nav-item"><div class="nav-icon">🏠</div></a>
+            <a href="../game/game.html" class="nav-item"><div class="nav-icon">🎲</div></a>
+            <a href="../top/top.html" class="nav-item"><div class="nav-icon">🏆</div></a>
+            <a href="../friends/friends.html" class="nav-item"><div class="nav-icon">👥</div></a>
+            <a href="#" class="nav-item"><div class="nav-icon active">📈</div></a>
+        </nav>
+    </div>
+
+    <script>
+        // Функция для получения данных из API Нацбанка
+        async function fetchRates() {
+            try {
+                // Запрашиваем USD, EUR и 100 RUB
+                // ID валют в API НБРБ: USD=431, EUR=451, RUB=456
+                const ids = [431, 451, 456];
+                const tableBody = document.getElementById('rates-table');
+                tableBody.innerHTML = ''; // Очищаем загрузку
+
+                for (let id of ids) {
+                    const response = await fetch(`https://www.nbrb.by/api/exrates/rates/${id}`);
+                    const data = await response.json();
+                    
+                    const row = `
+                        <tr>
+                            <td class="currency-name">${data.Cur_Abbreviation} (${data.Cur_Scale})</td>
+                            <td class="currency-val">${data.Cur_OfficialRate.toFixed(4)} BYN</td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                }
+
+                const now = new Date();
+                document.getElementById('update-time').innerText = `ПОСЛЕДНЕЕ ОБНОВЛЕНИЕ: ${now.toLocaleTimeString()}`;
+
+            } catch (error) {
+                document.getElementById('rates-table').innerHTML = '<tr><td colspan="2" style="color:red">ОШИБКА ПОЛУЧЕНИЯ ДАННЫХ</td></tr>';
+            }
+        }
+
+        // Запускаем при загрузке
+        window.onload = fetchRates;
+    </script>
+</body>
+</html>
