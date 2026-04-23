@@ -164,7 +164,7 @@
             padding: 10px 0 20px 0; border-top: 4px solid var(--mtb-red);
         }
         .nav-icon { font-size: 24px; color: white; opacity: 0.5; }
-        .nav-icon.active { opacity: 1; filter: drop-shadow(2px 2px 0px var(--mtb-red)); }
+        .nav-icon.active { opacity: 1; border: solid white 2px; }
 
     </style>
 </head>
