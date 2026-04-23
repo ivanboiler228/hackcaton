@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MTBank - Global Ranking</title>
+    <style>
+        :root {
+            --mtb-blue: #003d7c;
+            --mtb-red: #e30613;
+            --mtb-white: #ffffff;
+            --mtb-bg: #f4f7f9;
+            /* Приглушенные металлы */
+            --gold-bg: rgba(255, 215, 0, 0.15);
+            --silver-bg: rgba(192, 192, 192, 0.2);
+            --bronze-bg: rgba(205, 127, 50, 0.15);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #001a33;
+            display: flex; justify-content: center;
+            height: 100vh; overflow: hidden;
+        }
+
+        .phone-container {
+            width: 100%; max-width: 480px;
+            background-color: var(--mtb-bg);
+            height: 100%; display: flex;
+            flex-direction: column; position: relative;
+            border: 4px solid var(--mtb-blue);
+        }
+
+        /* HEADER */
+        .header {
+            background: var(--mtb-red);
+            padding: 10px; display: flex;
+            justify-content: space-around;
+            border-bottom: 4px solid var(--mtb-blue);
+        }
+
+        .status-item {
+            background: var(--mtb-white); color: var(--mtb-blue);
+            padding: 5px 10px; border: 2px solid var(--mtb-blue);
+            font-size: 14px; font-weight: bold;
+            box-shadow: 2px 2px 0px var(--mtb-blue);
+        }
+
+        /* РЕЙТИНГОВАЯ ЗОНА */
+        .ranking-content {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sticky-title {
+            background: var(--mtb-blue);
+            color: white; padding: 10px;
+            text-align: center; font-weight: bold;
+            border: 3px solid black;
+            box-shadow: 4px 4px 0px var(--mtb-red);
+            margin-bottom: 20px;
+        }
+
+        /* ТАБЛИЦА */
+        .leaderboard {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .player-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 10px;
+            border: 2px solid var(--mtb-blue);
+            margin-bottom: 8px;
+            background: white;
+            box-shadow: 3px 3px 0px var(--mtb-blue);
+        }
+
+        /* Подиумные места */
+        .player-row.rank-1 { background-color: var(--gold-bg); border-color: #b8860b; }
+        .player-row.rank-2 { background-color: var(--silver-bg); border-color: #808080; }
+        .player-row.rank-3 { background-color: var(--bronze-bg); border-color: #8b4513; }
+
+        
+        .player-info {
+            flex: 1;
+        }
+        .player-name {
+            display: block; 
+            font-size: 14px; 
+            font-weight: 900; /* Максимальная жирность */
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--mtb-blue);
+        }
+
+        .player-score {
+            font-weight: 900; /* Максимальная жирность */
+            font-size: 16px; 
+            color: var(--mtb-red);
+            white-space: nowrap;
+        }
+
+        .rank-num {
+            width: 45px; 
+            font-size: 20px; 
+            font-weight: 900;
+            color: var(--mtb-blue);
+            opacity: 0.8;
+        }
+
+        /* МОЁ МЕСТО (FIXED BOTTOM) */
+        .my-status-box {
+            background: var(--mtb-blue);
+            padding: 15px;
+            border-top: 4px solid var(--mtb-red);
+            color: white;
+        }
+
+        .my-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 2px dashed white;
+            padding: 10px;
+        }
+
+        /* КНОПКА ЗАРАБОТАТЬ */
+        .earn-btn {
+            display: block;
+            width: 100%;
+            background: var(--mtb-red);
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            padding: 15px;
+            margin-top: 15px;
+            font-weight: 900;
+            font-size: 16px;
+            border: 3px solid black;
+            box-shadow: 4px 4px 0px var(--mtb-blue);
+            transition: 0.1s;
+        }
+
+        .earn-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--mtb-blue);
+        }
+
+        /* NAVIGATION BOTTOM (Consistent with main) */
+        .bottom-nav {
+            background: var(--mtb-blue);
+            display: flex; justify-content: space-evenly;
+            padding: 10px 0 20px 0; border-top: 4px solid var(--mtb-red);
+        }
+        .nav-icon { font-size: 24px; color: white; opacity: 0.5; }
+        .nav-icon.active { opacity: 1; filter: drop-shadow(2px 2px 0px var(--mtb-red)); }
+
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        <header class="header">
+            <div class="status-item">TOKENS: 1250</div>
+            <div class="status-item">RANK: #99</div>
+        </header>
+
+        <main class="ranking-content">
+            <div class="sticky-title">-- TOP_PLAYERS_LIST --</div>
+
+            <main class="ranking-content">
+
+    <!-- 1 МЕСТО -->
+    <div class="player-row rank-1">
+        <div class="rank-num">01</div>
+        <div class="player-info"><span class="player-name">АЛЕКСАНДР В.</span></div>
+        <div class="player-score">100 000 🪙</div>
+    </div>
+
+    <!-- 2 МЕСТО -->
+    <div class="player-row rank-2">
+        <div class="rank-num">02</div>
+        <div class="player-info"><span class="player-name">ДМИТРИЙ С.</span></div>
+        <div class="player-score">85 400 🪙</div>
+    </div>
+
+    <!-- 3 МЕСТО -->
+    <div class="player-row rank-3">
+        <div class="rank-num">03</div>
+        <div class="player-info"><span class="player-name">ОЛЬГА К.</span></div>
+        <div class="player-score">72 150 🪙</div>
+    </div>
+
+    <!-- 4 МЕСТО -->
+    <div class="player-row">
+        <div class="rank-num">04</div>
+        <div class="player-info"><span class="player-name">ИВАН БОЙЛЕР</span></div>
+        <div class="player-score">50 200 🪙</div>
+    </div>
+
+    <!-- 5 МЕСТО -->
+    <div class="player-row">
+        <div class="rank-num">05</div>
+        <div class="player-info"><span class="player-name">АРТЕМ М.</span></div>
+        <div class="player-score">44 000 🪙</div>
+    </div>
+
+    <!-- 6 МЕСТО -->
+    <div class="player-row">
+        <div class="rank-num">06</div>
+        <div class="player-info"><span class="player-name">МАРИЯ П.</span></div>
+        <div class="player-score">39 900 🪙</div>
+    </div>
+
+    <!-- 7 МЕСТО -->
+    <div class="player-row">
+        <div class="rank-num">07</div>
+        <div class="player-info"><span class="player-name">НИКИТА Ж.</span></div>
+        <div class="player-score">32 500 🪙</div>
+    </div>
+
+    <!-- 8 МЕСТО -->
+    <div class="player-row">
+        <div class="rank-num">08</div>
+        <div class="player-info"><span class="player-name">ЕЛЕНА В.</span></div>
+        <div class="player-score">28 100 🪙</div>
+    </div>
+
+    <!-- 9 МЕСТО -->
+    <div class="player-row">
+        <div class="rank-num">09</div>
+        <div class="player-info"><span class="player-name">МАКСИМ Р.</span></div>
+        <div class="player-score">15 300 🪙</div>
+    </div>
+
+    <!-- 10 МЕСТО -->
+    <div class="player-row">
+        <div class="rank-num">10</div>
+        <div class="player-info"><span class="player-name">АННА С.</span></div>
+        <div class="player-score">8 400 🪙</div>
+    </div>
+        </main>
+
+        <!-- ВАШЕ МЕСТО И КНОПКА -->
+        <section class="my-status-box">
+            <div class="my-row">
+                <div style="font-size: 10px;">ВАШ_РЕЙТИНГ: <br><strong>#99 ИВАН ИВАНОВ</strong></div>
+                <div style="font-size: 16px; font-weight: 900;">1 250 🪙</div>
+            </div>
+            <a href="../game/game.html" class="earn-btn">ЗАРАБОТАТЬ ТОКЕНЫ! 🎲</a>
+        </section>
+
+        <!-- FOOTER NAV -->
+        <nav class="bottom-nav">
+            <a href="../main/index.html" class="nav-item"><div class="nav-icon">🏠</div></a>
+            <a href="../game/game.html" class="nav-item"><div class="nav-icon">🎲</div></a>
+            <a href="#" class="nav-item"><div class="nav-icon active">🏆</div></a>
+            <a href="#" class="nav-item"><div class="nav-icon">👥</div></a>
+            <a href="#" class="nav-item"><div class="nav-icon">📈</div></a>
+        </nav>
+    </div>
+
+</body>
+</html>
