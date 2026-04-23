@@ -62,7 +62,10 @@
             background: var(--mtb-blue);
             color: white; padding: 20px;
             text-align: center; font-weight: bold;
-            border: 3px solid black;
+            border-bottom: 3px solid white;
+            border-top: 3px solid black;
+            border-right: 3px solid white;
+            border-left: 3px solid black;
             box-shadow: 4px 4px 0px var(--mtb-red);
             margin-bottom: 20px;
             font-size: 25px;
