@@ -1,7 +1,742 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>MTBank Retro Super App</title>
+    <style>
+        :root {
+            --mtb-blue: #003d7c;
+            --mtb-red: #e30613;
+            --mtb-white: #ffffff;
+            --mtb-bg: #f4f7f9;
+            --retro-shadow: 4px 4px 0px var(--mtb-blue);
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #001a33;
+            display: flex; justify-content: center;
+            height: 100vh; overflow: hidden;
+        }
+        .phone-container {
+            width: 100%; max-width: 480px;
+            background-color: var(--mtb-bg);
+            height: 100%; display: flex;
+            flex-direction: column; position: relative;
+            border: 4px solid var(--mtb-blue);
+        }
+
+        /* HEADER */
+        .header {
+            background: var(--mtb-red);
+            padding: 10px; display: flex;
+            justify-content: space-around; z-index: 1000;
+            border-bottom: 4px solid var(--mtb-blue);
+        }
+
+        .status-item {
+            background: var(--mtb-white); color: var(--mtb-blue);
+            padding: 5px 10px; border: 2px solid var(--mtb-blue);
+            font-size: 14px; font-weight: bold;
+            box-shadow: 2px 2px 0px var(--mtb-blue);
+        }
+        .tabs-container {
+            flex: 1; position: relative; overflow: hidden;
+        }
+        .tab-panel {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; flex-direction: column; overflow-y: auto;
+            background: var(--mtb-bg);
+        }
+        .tab-panel.active { display: flex; }
+        #tab-home { scroll-behavior: smooth; padding: 0; }
+        #tab-game { padding: 10px 20px; align-items: center; overflow-x: hidden; overflow-y: hidden; }
+
+        /* ===== HOME ===== */
+        .section-home {
+            min-height: 50vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .room-container {
+            width: 100%; height: 350px; background-color: white;
+        }
+
+        .sticky-title {
+            position: sticky; top: -1px; background: var(--mtb-blue); color: white;
+            padding: 10px; font-size: 16px; font-weight: bold;
+            border-top: 4px solid var(--mtb-red); z-index: 900; text-align: center;
+        }
+        .shop-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; background: #ddd;
+        }
+        .shop-item {
+            background: white; border: 3px solid var(--mtb-blue);
+            padding: 10px; display: flex; flex-direction: column;
+            align-items: center; box-shadow: 4px 4px 0px #888;
+        }
+        .item-img { font-size: 40px; margin-bottom: 10px; }
+        .item-name { font-size: 12px; font-weight: bold; text-align: center; height: 30px; }
+        .item-price { color: var(--mtb-red); font-weight: 900; margin: 10px 0; }
+        .buy-btn {
+            width: 100%; background: var(--mtb-blue); color: white;
+            border: none; padding: 8px; font-family: inherit;
+            font-weight: bold; cursor: pointer; border: 2px solid black;
+            box-shadow: 2px 2px 0 black;
+        }
+        .buy-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 black; }
+        .shop-item.locked { opacity: 0.6; filter: grayscale(1); }
+        .shop-item.locked .buy-btn { background: #666; cursor: not-allowed; }
+        .level-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .lvl-label { font-weight: bold; font-size: 12px; }
+        .lvl-num { font-size: 24px; background: var(--mtb-blue); color: white; padding: 0 10px; }
+        .xp-container { height: 20px; background: #eee; border: 2px solid var(--mtb-blue); position: relative; overflow: hidden; }
+        .xp-bar { height: 100%; background: var(--mtb-red); border-right: 2px solid var(--mtb-blue); }
+        .xp-details { display: flex; justify-content: space-between; font-size: 9px; margin-top: 5px; font-weight: bold; }
+        .trend { font-size: 10px; margin-top: 5px; font-weight: bold; }
+        .trend.up { color: green; } .trend.down { color: var(--mtb-red); }
+        .finance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .history-header { background: var(--mtb-blue); color: white; padding: 5px; font-size: 12px; margin-bottom: 10px; text-align: center; }
+        .history-scroll { max-height: 200px; overflow-y: auto; }
+        .history-row { display: flex; justify-content: space-between; font-size: 10px; padding: 8px 0; border-bottom: 1px dashed var(--mtb-blue); }
+        .h-date { color: #888; width: 40px; } .h-name { flex: 1; text-transform: uppercase; padding: 0 5px; }
+        .h-price { font-weight: bold; } .h-price.plus { color: green; } .h-price.minus { color: var(--mtb-red); } .h-price.bank { color: var(--mtb-blue); }
+        .blink-text { animation: blink 1s steps(2) infinite; }
+        @keyframes blink { from { visibility: visible; } to { visibility: hidden; } }
+
+        .section-mail { padding: 20px; background: var(--mtb-bg); }
+        .email-profile {
+            background: var(--mtb-blue); color: white; padding: 15px;
+            border: 3px solid black; box-shadow: 6px 6px 0px var(--mtb-red); margin-bottom: 25px;
+        }
+        .email-profile label { font-size: 9px; letter-spacing: 1px; opacity: 0.8; }
+        .email-profile .email-val { font-size: 16px; font-weight: 900; margin-top: 5px; word-break: break-all; }
+        .mail-card {
+            background: white; border: 3px solid var(--mtb-blue);
+            padding: 12px; margin-bottom: 12px; display: flex; gap: 12px;
+            align-items: center; box-shadow: 4px 4px 0px var(--mtb-blue);
+        }
+        .mail-card.unread { border-left: 10px solid var(--mtb-red); }
+        .mail-icon { font-size: 24px; filter: drop-shadow(2px 2px 0px #eee); }
+        .mail-text { flex: 1; }
+        .mail-title { display: block; font-weight: 900; font-size: 13px; color: var(--mtb-blue); margin-bottom: 3px; text-transform: uppercase; }
+        .mail-desc { display: block; font-size: 10px; color: #444; line-height: 1.2; }
+        .mail-time { font-size: 9px; font-weight: bold; color: #888; align-self: flex-start; }
+
+        /* ===== GAME ===== */
+        .game-retro-title {
+            background: var(--mtb-red); color: white; padding: 12px 20px;
+            text-transform: uppercase; font-weight: 900; font-size: 18px;
+            border: 4px solid var(--mtb-blue); box-shadow: 6px 6px 0 black;
+            margin-bottom: 20px; text-align: center; width: 100%;
+        }
+        .energy-retro {
+            background: #111; color: #2ecc71; border: 4px solid var(--mtb-blue);
+            box-shadow: 4px 4px 0 var(--mtb-red); padding: 12px 20px;
+            margin-bottom: 10px; font-weight: bold; display: flex;
+            justify-content: space-between; align-items: center; font-family: 'Courier New', monospace; width: 100%;
+        }
+        #board-viewport {
+            width: 100%; height: 500px; background: #2c3e50;
+            background-image: radial-gradient(#34495e 1px, transparent 1px);
+            background-size: 20px 20px; border: 6px solid var(--mtb-blue);
+            box-shadow: inset 0 10px 30px rgba(0,0,0,0.8), 6px 6px 0 var(--mtb-red);
+            position: relative; overflow: hidden; margin-bottom: 15px; border-radius: 8px;
+        }
+        #board-container {
+            position: absolute; left: 50%; top: 75%; width: 280px;
+            margin-left: -140px; transition: transform 0.4s ease-in-out;
+        }
+        .board-tile {
+            position: absolute; width: 60px; height: 60px;
+            border: 4px solid var(--mtb-blue); box-shadow: 0 6px 0 black;
+            border-radius: 8px; display: flex; align-items: center;
+            justify-content: center; font-weight: 900; font-size: 24px;
+            color: white; background: #3498db;
+        }
+        .board-tile.quiz { background: #3498db; } .board-tile.chance { background: #e67e22; }
+        .board-tile.jackpot { background: #f1c40f; border-color: white; color: black; box-shadow: 0 6px 0 black, 0 0 10px #f1c40f; }
+        .board-tile.passed { background: #2ecc71 !important; border-color: #27ae60 !important; color: #145a32 !important; opacity: 0.7; box-shadow: 0 4px 0 black !important; }
+        #player-token {
+            position: absolute; width: 60px; height: 60px; font-size: 45px;
+            z-index: 100; display: flex; align-items: center; justify-content: center;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 8px 4px rgba(0,0,0,0.6)); margin-top: -15px;
+        }
+        .dice-section { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 15px; width: 100%; }
+        #dice-face {
+            font-size: 50px; line-height: 1; color: var(--mtb-red);
+            background: white; border: 3px solid var(--mtb-blue); border-radius: 10px;
+            width: 60px; height: 60px; display: flex; align-items: center;
+            justify-content: center; box-shadow: 4px 4px 0 black; user-select: none;
+        }
+        .shaking { animation: dice-shake 0.2s infinite; }
+        @keyframes dice-shake {
+            0% { transform: rotate(0deg) scale(1); } 25% { transform: rotate(-15deg) scale(1.1); }
+            50% { transform: rotate(0deg) scale(1); } 75% { transform: rotate(15deg) scale(1.1); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+        .retro-btn {
+            background: var(--mtb-red); color: white; border: 3px solid black;
+            padding: 12px 25px; font-family: 'Courier New', monospace;
+            font-weight: 900; font-size: 16px; cursor: pointer; box-shadow: 4px 4px 0 black;
+        }
+        .retro-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 black; }
+        .retro-btn.dice-btn { width: auto; max-width: 200px; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: flex; justify-content: center;
+            align-items: center; z-index: 9999;
+        }
+        .modal-content {
+            background: var(--mtb-white); max-width: 380px; width: 90%;
+            border: 6px solid var(--mtb-blue); box-shadow: 12px 12px 0 black;
+            padding: 20px; text-align: center;
+        }
+        .modal-title { color: var(--mtb-red); margin: 0 0 20px; font-size: 22px; text-transform: uppercase; }
+        .quiz-text { font-weight: bold; margin-bottom: 20px; font-size: 16px; }
+        .options-container { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn {
+            background: var(--mtb-blue); color: white; border: 3px solid black;
+            padding: 15px; font-family: 'Courier New', monospace;
+            font-weight: bold; cursor: pointer; box-shadow: 4px 4px 0 black;
+        }
+        .option-btn.correct { background: #27ae60 !important; } .option-btn.wrong { background: #e74c3c !important; }
+
+        .wheel-outer { position: relative; width: 250px; height: 250px; margin: 20px auto; }
+        .wheel-container {
+            width: 100%; height: 100%; border-radius: 50%;
+            border: 8px solid var(--mtb-blue); position: relative; overflow: hidden;
+            transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1);
+            background: conic-gradient(#e74c3c 0deg 72deg, #3498db 72deg 144deg, #9b59b6 144deg 216deg, #2ecc71 216deg 288deg, #f1c40f 288deg 360deg);
+            box-shadow: 8px 8px 0 black;
+        }
+        .wheel-part { position: absolute; width: 100%; height: 100%; display: flex; justify-content: center; align-items: flex-start; padding-top: 20px; font-weight: bold; color: white; font-family: 'Courier New', monospace; text-shadow: 2px 2px 0 black; }
+        .part-1 { transform: rotate(36deg); } .part-2 { transform: rotate(108deg); } .part-3 { transform: rotate(180deg); } .part-4 { transform: rotate(252deg); } .part-5 { transform: rotate(324deg); }
+        .wheel-pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); z-index: 100; font-size: 40px; color: #f1c40f; filter: drop-shadow(0 4px 2px rgba(0,0,0,0.5)); }
+
+        /* ===== TOP ===== */
+        .leaderboard-table { width: 100%; border-collapse: collapse; font-family: 'Courier New', monospace; margin: 20px 0; }
+        .leaderboard-table th { background: var(--mtb-blue); color: white; padding: 8px; border: 2px solid black; }
+        .leaderboard-table td { background: white; padding: 8px; border: 2px solid var(--mtb-blue); text-align: center; }
+        .player-row {
+            display: flex; align-items: center; padding: 12px 10px;
+            border: 2px solid var(--mtb-blue); margin-bottom: 8px;
+            background: white; box-shadow: 3px 3px 0px var(--mtb-blue);
+        }
+        .player-row.rank-1 { background-color: rgba(255,215,0,0.15); border-color: #b8860b; }
+        .player-row.rank-2 { background-color: rgba(192,192,192,0.2); border-color: #808080; }
+        .player-row.rank-3 { background-color: rgba(205,127,50,0.15); border-color: #8b4513; }
+        .player-info { flex: 1; } .player-name { font-weight: 900; text-transform: uppercase; color: var(--mtb-blue); }
+        .player-score { font-weight: 900; font-size: 16px; color: var(--mtb-red); white-space: nowrap; }
+        .rank-num { width: 45px; font-size: 20px; font-weight: 900; color: var(--mtb-blue); opacity: 0.8; }
+        .my-status-box {
+            background: var(--mtb-blue); padding: 15px; border-top: 4px solid var(--mtb-red); color: white;
+        }
+        .earn-btn {
+            display: block; width: 100%; background: var(--mtb-red); color: white; text-align: center;
+            padding: 15px; margin-top: 15px; font-weight: 900; font-size: 16px;
+            border: 3px solid black; box-shadow: 4px 4px 0px var(--mtb-blue); text-decoration: none;
+        }
+        .earn-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0px var(--mtb-blue); }
+
+        /* ===== FRIENDS ===== */
+        .friend-card {
+            display: flex; align-items: center; background: white; border: 3px solid var(--mtb-blue);
+            padding: 12px; box-shadow: 4px 4px 0px var(--mtb-blue); cursor: pointer; position: relative;
+            margin-bottom: 15px;
+        }
+        .friend-avatar { width: 45px; height: 45px; background: #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 15px; }
+        .friend-main-info { flex: 1; } .friend-name { font-weight: 900; font-size: 22px; color: var(--mtb-blue); text-transform: uppercase; } .friend-tokens { font-weight: 900; font-size: 20px; color: var(--mtb-red); }
+        .friend-tooltip {
+            position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+            width: 95%; background: var(--mtb-blue); color: white; padding: 15px;
+            border: 3px solid black; box-shadow: 6px 6px 0px var(--mtb-red);
+            z-index: 1000; opacity: 0; visibility: hidden; pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin-top: 10px;
+        }
+        .friend-tooltip::after {
+            content: ''; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+            border-left: 10px solid transparent; border-right: 10px solid transparent;
+            border-bottom: 10px solid black;
+        }
+        .friend-card:hover { z-index: 1100; transform: scale(1.02); }
+        .friend-card:hover .friend-tooltip { opacity: 1; visibility: visible; top: 110%; }
+        .info-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; border-bottom: 1px dashed rgba(255,255,255,0.4); padding-bottom: 4px; }
+        .info-label { font-weight: bold; opacity: 0.9; text-transform: uppercase; } .info-val { font-weight: 900; }
+        .invite-action-box { margin-top: 30px; background: var(--mtb-blue); padding: 15px 20px; border: 4px solid var(--mtb-red); }
+        .referral-info { display: flex; justify-content: space-between; align-items: center; border: 2px dashed white; padding: 8px 12px; margin-bottom: 15px; color: white; }
+        .ref-label { font-size: 10px; font-weight: bold; opacity: 0.8; } .ref-bonus { font-size: 14px; font-weight: 900; color: #00ff00; }
+        .invite-btn {
+            display: block; width: 100%; background: var(--mtb-red); color: white; text-align: center;
+            text-decoration: none; padding: 15px; font-weight: 900; font-size: 18px;
+            text-transform: uppercase; border: 3px solid black; box-shadow: 4px 4px 0 #000;
+        }
+        .invite-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; background-color: #af0712; }
+
+        /* ===== STONKS ===== */
+        .retro-table { width: 100%; background: white; border: 3px solid var(--mtb-blue); box-shadow: 6px 6px 0px var(--mtb-blue); border-collapse: collapse; margin-bottom: 30px; }
+        .retro-table th { background: var(--mtb-blue); color: white; padding: 10px; text-align: left; font-size: 12px; }
+        .retro-table td { padding: 15px 10px; border-bottom: 1px dashed var(--mtb-blue); font-weight: 900; font-size: 16px; }
+        .currency-name { color: var(--mtb-blue); } .currency-val { color: var(--mtb-red); text-align: right; }
+        .update-tag { font-size: 10px; text-align: center; color: var(--mtb-blue); margin-top: -15px; margin-bottom: 25px; font-weight: bold; }
+        .stock-card { background: var(--mtb-blue); color: white; padding: 20px; border: 3px solid black; box-shadow: 6px 6px 0px var(--mtb-red); }
+        .stock-title { font-size: 14px; margin-bottom: 10px; display: block; opacity: 0.8; } .stock-price { font-size: 28px; font-weight: 900; } .stock-trend { color: #00ff00; font-size: 12px; margin-top: 5px; }
+        .loading { color: var(--mtb-red); font-weight: bold; animation: blink 1s infinite; }
+
+        .bottom-nav {
+            background: var(--mtb-blue); border-top: 4px solid var(--mtb-red);
+            display: flex; justify-content: space-evenly; padding: 10px 0 20px 0; z-index: 1000;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; opacity: 0.6; transition: 0.2s; cursor: pointer; }
+        .nav-item.active { opacity: 1; }
+        .nav-icon { font-size: 24px; color: white; filter: drop-shadow(2px 2px 0px var(--mtb-red)); }
+        .nav-text { color: white; font-size: 8px; font-weight: bold; margin-top: 2px; }
+
+        /* ===== CATCH GAME (вкладка GAME) ===== */
+        .catch-game-content {
+            max-width: 420px;
+            width: 95%;
+            padding: 15px;
+            position: relative;
+        }
+
+        .game-status-bar {
+            display: flex;
+            justify-content: space-between;
+            background: #111;
+            color: #00ff00;
+            padding: 8px 15px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            border: 3px solid var(--mtb-blue);
+            margin-bottom: 10px;
+            box-shadow: 2px 2px 0 black;
+        }
+
+        #game-area {
+            width: 100%;
+            height: 350px;
+            background-color: #f0f0f0;
+            background-image: linear-gradient(#e0e0e0 1px, transparent 1px), linear-gradient(90deg, #e0e0e0 1px, transparent 1px);
+            background-size: 20px 20px;
+            border: 4px solid var(--mtb-blue);
+            position: relative;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        #basket {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: auto;
+            border: 2px solid black;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+            will-change: left;
+            pointer-events: none;
+        }
+
+        .coin {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            background-color: #f1c40f;
+            border: 3px solid #b8860b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #b8860b;
+            font-size: 18px;
+            box-shadow: inset 0 0 5px rgba(255,255,255,0.8), 2px 2px 0 rgba(0,0,0,0.3);
+            z-index: 10;
+            top: -40px;
+            animation: fall 2s linear forwards;
+        }
+
+        @keyframes fall {
+            to {
+                top: 100%;
+            }
+        }
+
+        .game-instruction {
+            font-size: 10px;
+            color: #666;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .main-scroll-area {
+            flex: 1; overflow-y: auto; background: var(--mtb-bg);
+        }
+
+        .room-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%; height: 350px;
+        }
+.room_img{
+    display: flex;
+    object-fit:contain;
+    width: 100%;
+    height: auto;
+}
+        .sticky-title {
+            position: sticky; top: 0; background: var(--mtb-blue);
+            color: white; padding: 12px; font-weight: bold; text-align: center;
+            z-index: 10; border-top: 4px solid var(--mtb-red);
+        }
+
+        .finance-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px;
+        }
+
+        .fin-card {
+            background: white; border: 3px solid var(--mtb-blue); padding: 10px;
+            text-align: center; box-shadow: 4px 4px 0 black;
+        }
+
+        .fin-card label { font-size: 10px; opacity: 0.7; display: block; }
+        .fin-card .amount { font-size: 14px; font-weight: bold; margin: 5px 0; }
+
+        .shop-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px;
+            background: #ccc;
+        }
+
+        .shop-item {
+            background: white; border: 3px solid var(--mtb-blue); padding: 10px;
+            display: flex; flex-direction: column; align-items: center;
+            box-shadow: 3px 3px 0 black;
+        }
+
+        .shop-item.locked { opacity: 0.5; filter: grayscale(1); }
+
+.item-imgage{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+        .buy-btn {
+            background: var(--mtb-red); color: white; border: 2px solid black;
+            width: 100%; padding: 5px; font-family: inherit; font-weight: bold;
+        }
+
+        .shop-modal-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.8); z-index: 10000; display: flex;
+            justify-content: center; align-items: center;
+        }
+
+        .shop-modal-content {
+            background: white; width: 90%; max-width: 350px; padding: 20px;
+            border: 4px solid var(--mtb-blue); box-shadow: 10px 10px 0 var(--mtb-red);
+        }
+
+        .history-scroll {
+            max-height: 150px; overflow-y: auto; padding: 10px;
+            background: #fdfdfd; font-size: 11px;
+        }
+
+        .history-row {
+            display: flex; justify-content: space-between; border-bottom: 1px dashed #ccc;
+            padding: 5px 0;
+        }
+        .cactus-image{
+            width: 50%;
+        }
+        .karta-image{
+            width: 90%;
+        }
+    </style>
+</head>
+<body>
+<div class="phone-container">
+    <header class="header">
+        <div class="status-item" id="tokens-display">🪙 1250</div>
+        <div class="status-item" id="level-display">⭐️ LVL 05</div>
+        <div class="status-item" id="energy-display">⚡️ 5/5</div>
+    </header>
+
+    <div class="tabs-container">
+
+        <!-- Вкладка HOME -->
+        <div id="tab-home" class="tab-panel active">
+            <main class="main-scroll-area">
+                <section class="section-home">
+                    <div class="room-container">
+                        <img id="roomImage" class="room_img" src="https://i.pinimg.com/736x/95/9f/0a/959f0a09bfbdfa588d61b2106d348d85.jpg" alt="Home">
+                    </div>
+                </section>
+
+                <div class="sticky-title">ЛИЧНАЯ_ИНФОРМАЦИЯ</div>
+                <section class="section-info">
+                    <div class="retro-box level-section">
+                        <div class="level-header">
+                            <span class="lvl-label">УРОВЕНЬ:</span>
+                            <span class="lvl-num lvl-val">01</span>
+                        </div>
+                        <div class="xp-container">
+                            <div id="xp-bar-fill" class="xp-bar" style="width: 0%;"></div>
+                        </div>
+                        <div class="xp-details">
+                            <span id="xp-text">XP: 0 / 1000</span>
+                            <span class="blink-text">MTB_SECURE_CONNECTION...</span>
+                        </div>
+                    </div>
+
+                    <div class="finance-grid">
+                        <div class="fin-card">
+                            <label>BANK_DEBIT</label>
+                            <div class="amount">425.50 BYN</div>
+                            <div class="trend down">-12% (МЕСЯЦ)</div>
+                        </div>
+                        <div class="fin-card" style="border-color: var(--mtb-red);">
+                            <label>GAME_BALANCE</label>
+                            <div class="amount"><span class="balance-val">0</span> 🪙</div>
+                            <div class="trend up">+40% (НЕДЕЛЯ)</div>
+                        </div>
+                    </div>
+
+                    <div class="retro-box history-section">
+                        <div class="history-header">ИСТОРИЯ_ОПЕРАЦИЙ:</div>
+                        <div id="history-log-container" class="history-scroll">
+                        </div>
+                    </div>
+                </section>
+
+                <div id="shop" class="sticky-title">-- МАГАЗИН ПРИКОЛЮХ --</div>
+            <section class="shop-grid">
+                <!-- Товар 1: Доступен -->
+                
+                <div class="shop-item">
+                    <div class="item-imgage">
+                        <img class="cactus-image" src="https://i.pinimg.com/736x/e3/15/3e/e3153e12324ff09c4e2afffa328c7c1c.jpg" alt="золотой_кактус">
+                    </div>
+                    <div class="item-name">ЗОЛОТОЙ_КАКТУС</div>
+                    <div class="item-price">500 🪙</div>
+                    <!-- Добавили связь с функцией -->
+                    <button class="buy-btn" onclick="openShopModal('cactus')">КУПИТЬ</button>
+                </div>
+
+                <div class="shop-item">
+                    <div class="item-img">
+                        <div class="item-imgage">
+                            <img class="karta-image" src="https://i.pinimg.com/736x/2a/af/1a/2aaf1a1ede7a2fe27d2f4b28f448cac2.jpg" alt="карта">
+                        </div>
+                    </div>
+                    <div class="item-name">КАРТА</div>
+                    <div class="item-price">600 🪙</div>
+                    <!-- Добавляем ID товара 'map' -->
+                    <button class="buy-btn" onclick="openShopModal('map')">КУПИТЬ</button>
+                </div>
+
+                <!-- Товар 3: Недоступен (Дорого) -->
+
+                <div class="shop-item locked">
+                    <div class="item-img">🛋️</div>
+                    <div class="item-name">РЕТРО_ДИВАН</div>
+                    <div class="item-price">1500 🪙</div>
+                    <button class="buy-btn">LOCKED</button>
+                </div>
+
+                <div class="shop-item locked">
+                    <div class="item-img">💡</div>
+                    <div class="item-name">ЛАМПА</div>
+                    <div class="item-price">3560 🪙</div>
+                    <button class="buy-btn">LOCKED</button>
+                </div>
+
+                <div class="shop-item locked">
+                    <div class="item-img">🍬</div>
+                    <div class="item-name">КАРТА_ХАЛВА</div>
+                    <div class="item-price">5400 🪙</div>
+                    <button class="buy-btn">LOCKED</button>
+                </div>
+
+                <div class="shop-item locked">
+                    <div class="item-img">📺</div>
+                    <div class="item-name">ЛАМПОВЫЙ_ТВ</div>
+                    <div class="item-price">6800 🪙</div>
+                    <button class="buy-btn">LOCKED</button>
+                </div>
+
+                <!-- Товар 4: Недоступен (Дорого) -->
+                <div class="shop-item locked">
+                    <div class="item-img">🤖</div>
+                    <div class="item-name">MTБ-РОБОТ</div>
+                    <div class="item-price">99999 🪙</div>
+                    <button class="buy-btn">LOCKED</button>
+                </div>
+            </section>
+
+            <div style="height: 100px;"></div>
+            </main>
+        </div>
+
+        <!-- Модальное окно магазина -->
+        <div id="shop-modal" class="shop-modal-overlay" style="display: none;">
+            <div class="shop-modal-content">
+                <button class="close-modal-btn" onclick="closeShopModal()">[ X ]</button>
+                <div id="modal-item-img-container">
+                    <img id="modal-item-pic" src="" alt="" style="width: 100px; border: 2px solid #000;">
+                </div>
+                <h2 id="modal-item-name">ITEM_NAME</h2>
+                <p id="modal-item-desc">Description text...</p>
+                <div class="modal-price-row">
+                    <span>ЦЕНА:</span>
+                    <span id="modal-item-price">0 🪙</span>
+                </div>
+                <button id="buy-confirm-btn" class="buy-confirm-btn">ПОДТВЕРДИТЬ</button>
+            </div>
+        </div>
+
+        <!-- Вкладка GAME -->
+        <div id="tab-game" class="tab-panel">
+            <button class="retro-btn finance-help-btn" onclick="showFinanceHelp()">помощь 💡</button>
+            <div class="energy-retro">
+                <span>⚡️ <span id="energy-count">5</span>/5</span>
+                <span id="energy-timer">МАКСИМУМ</span>
+            </div>
+            <div id="board-viewport">
+                <div id="board-container">
+                    <div id="player-token"><img src="https://i.postimg.cc/zByYBNm6/cel.png" class="player-sprite"></div>
+                </div>
+            </div>
+            <div class="dice-section">
+                <div id="dice-face">⚀</div>
+                <button id="roll-btn" class="retro-btn dice-btn">БРОСИТЬ КУБИК</button>
+            </div>
+        </div>
+
+        <!-- Вкладка TOP -->
+        <div id="tab-top" class="tab-panel" style="padding: 20px;">
+            <div class="game-retro-title">🏆 ТОП ИГРОКОВ</div>
+            <div class="player-row rank-1"><div class="rank-num">01</div><div class="player-info"><span class="player-name">АЛЕКСАНДР В.</span></div><div class="player-score">100 000 🪙</div></div>
+            <div class="player-row rank-2"><div class="rank-num">02</div><div class="player-info"><span class="player-name">ДМИТРИЙ С.</span></div><div class="player-score">85 400 🪙</div></div>
+            <div class="player-row rank-3"><div class="rank-num">03</div><div class="player-info"><span class="player-name">ОЛЬГА К.</span></div><div class="player-score">72 150 🪙</div></div>
+            <div class="player-row"><div class="rank-num">04</div><div class="player-info"><span class="player-name">ИВАН БОЙЛЕР</span></div><div class="player-score">50 200 🪙</div></div>
+            <div class="player-row"><div class="rank-num">05</div><div class="player-info"><span class="player-name">АРТЕМ М.</span></div><div class="player-score">44 000 🪙</div></div>
+            <div class="player-row"><div class="rank-num">06</div><div class="player-info"><span class="player-name">МАРИЯ П.</span></div><div class="player-score">39 900 🪙</div></div>
+            <div class="player-row"><div class="rank-num">07</div><div class="player-info"><span class="player-name">НИКИТА Ж.</span></div><div class="player-score">32 500 🪙</div></div>
+            <div class="player-row"><div class="rank-num">08</div><div class="player-info"><span class="player-name">ЕЛЕНА В.</span></div><div class="player-score">28 100 🪙</div></div>
+            <div class="my-status-box" style="margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border: 2px dashed white; padding: 10px;">
+                    <div>ВАШ_РЕЙТИНГ: <strong>#99 ИВАН ИВАНОВ</strong></div>
+                    <div style="font-weight: 900;" id="my-rank-tokens">1 250 🪙</div>
+                </div>
+                <a class="earn-btn" onclick="switchTab('game')">ЗАРАБОТАТЬ ТОКЕНЫ! 🎲</a>
+            </div>
+        </div>
+
+        <!-- Вкладка FRIENDS -->
+        <div id="tab-friends" class="tab-panel" style="padding: 20px;">
+            <div class="game-retro-title">👥 ДРУЗЬЯ</div>
+            <div class="friend-card">
+                <div class="friend-avatar">🐱</div>
+                <div class="friend-main-info"><span class="friend-name">АРТЕМ МИХАЛЫЧ</span><span class="friend-tokens">44 000 🪙</span></div>
+                <div class="friend-tooltip">
+                    <div class="info-row"><span class="info-label">В ИГРЕ:</span><span class="info-val">14 ДН.</span></div>
+                    <div class="info-row"><span class="info-label">РЕЙТИНГ:</span><span class="info-val">#05</span></div>
+                    <div class="info-row"><span class="info-label">ОНЛАЙН:</span><span class="info-val" style="color:#00ff00">ONLINE</span></div>
+                </div>
+            </div>
+            <div class="friend-card">
+                <div class="friend-avatar">🦊</div>
+                <div class="friend-main-info"><span class="friend-name">МАРИЯ ПЕТРОВА</span><span class="friend-tokens">39 900 🪙</span></div>
+                <div class="friend-tooltip">
+                    <div class="info-row"><span class="info-label">В ИГРЕ:</span><span class="info-val">30 ДН.</span></div>
+                    <div class="info-row"><span class="info-label">РЕЙТИНГ:</span><span class="info-val">#06</span></div>
+                    <div class="info-row"><span class="info-label">ОНЛАЙН:</span><span class="info-val">2 ЧАСА НАЗАД</span></div>
+                </div>
+            </div>
+            <div class="invite-action-box">
+                <div class="referral-info"><span class="ref-label">ВАША_НАГРАДА:</span><span class="ref-bonus">+100 🪙 ЗА ДРУГА</span></div>
+                <a href="https://t.me/share/url?url=t.me/MTB_Game_Bot?start=ref123&text=Бро, залетай в игру от МТБанка!" class="invite-btn">ПРИГЛАСИТЬ ДРУГА!</a>
+            </div>
+        </div>
+
+        <!-- Вкладка STONKS -->
+        <div id="tab-stonks" class="tab-panel" style="padding: 20px;">
+            <div class="sticky-title">-- EXCHANGE_RATES_NBRB --</div>
+            <table class="retro-table">
+                <thead><tr><th>ВАЛЮТА</th><th style="text-align: right;">КУРС_НБРБ</th></tr></thead>
+                <tbody id="rates-table">
+                    <tr><td colspan="2" class="loading" style="text-align: center;">ПОДКЛЮЧЕНИЕ К ШЛЮЗУ...</td></tr>
+                </tbody>
+            </table>
+            <div class="update-tag" id="update-time">ОЖИДАНИЕ ДАННЫХ...</div>
+            <div class="sticky-title">-- MTB_STOCK_INDEX --</div>
+            <div class="stock-card">
+                <span class="stock-title">АКЦИИ МТБАНК (MTB)</span>
+                <div class="stock-price">145.20 🪙</div>
+                <div class="stock-trend">↑ +2.4% ЗА СЕГОДНЯ</div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <div class="nav-item active" data-tab="home"><div class="nav-icon">🏠</div><div class="nav-text">Дом</div></div>
+        <div class="nav-item" data-tab="game"><div class="nav-icon">🎲</div><div class="nav-text">Игра</div></div>
+        <div class="nav-item" data-tab="top"><div class="nav-icon">🏆</div><div class="nav-text">Топ</div></div>
+        <div class="nav-item" data-tab="friends"><div class="nav-icon">👥</div><div class="nav-text">Друзья</div></div>
+        <div class="nav-item" data-tab="stonks"><div class="nav-icon">📈</div><div class="nav-text">Стонкс</div></div>
+    </nav>
+</div>
+
+<!-- Модальные окна -->
+<div id="quiz-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h3 class="modal-title">🏦 ВОПРОС ОТ БАНКА</h3>
+        <p id="quiz-question" class="quiz-text"></p>
+        <div id="quiz-options" class="options-container"></div>
+    </div>
+</div>
+
+<div id="wheel-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h3 class="modal-title">🎰 ФОРТУНА МТБАНКА</h3>
+        <div class="wheel-outer">
+            <div class="wheel-pointer">▼</div>
+            <div id="wheel" class="wheel-container">
+                <div class="wheel-part part-1">10 🪙</div>
+                <div class="wheel-part part-2">20 🪙</div>
+                <div class="wheel-part part-3">30 🪙</div>
+                <div class="wheel-part part-4">50 🪙</div>
+                <div class="wheel-part part-5">100 🪙</div>
+            </div>
+        </div>
+        <button id="spin-btn" class="retro-btn" onclick="spinWheel()">КРУТИТЬ! 🚀</button>
+    </div>
+</div>
+
+<div id="catch-game-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content catch-game-content">
+        <h3 class="modal-title">💰 ЛОВИ КЭШБЭК!</h3>
+        <div class="game-status-bar">
+            <div id="game-timer">ВРЕМЯ: 10с</div>
+            <div id="game-score">СЧЕТ: 0</div>
+        </div>
+        <div id="game-area">
+            <img src="https://oceanminsk.by/wp-content/uploads/2022/10/logo-mtbank.jpg" alt="MTBank" id="basket">
+        </div>
+        <div class="game-instruction">[ ВОДИ ПАЛЬЦЕМ, ЧТОБЫ ЛОВИТЬ ]</div>
+    </div>
+</div>
+
 <script>
     (function() {
 
-        let balance = 1000;
+        let balance = 1250;
         let level = 5;
         let energy = 5;
         let currentPos = 0;
@@ -39,7 +774,6 @@
         const myRankTokens = document.getElementById('my-rank-tokens');
         const sidebar = document.getElementById('sidebar');
         const tabHome = document.getElementById('tab-home');
-        const playerSpriteUrl = "https://i.postimg.cc/zByYBNm6/cel.png"; 
 
         function updateAllDisplays() {
             if (tokensDisplay) tokensDisplay.textContent = `🪙 ${balance}`;
@@ -74,16 +808,6 @@
                 alert('❌ Недостаточно токенов!');
             }
         };
-       
-function showFinanceHelp() {
-    document.getElementById('finance-help-modal').style.display = 'flex';
-}
-
-function closeFinanceHelp() {
-    document.getElementById('finance-help-modal').style.display = 'none';
-}
-
-
         function openShopModal(itemId) {
             const item = shopData[itemId];
             if (item) {
@@ -93,6 +817,7 @@ function closeFinanceHelp() {
                 document.getElementById('modal-item-price').innerText = `${item.price} 🪙`;
                 document.getElementById('modal-item-pic').src = item.image;
                 document.getElementById('shop-modal').style.display = 'flex';
+
                 const confirmBtn = document.getElementById('buy-confirm-btn');
                 confirmBtn.onclick = () => confirmPurchase(itemId);
             }
@@ -265,8 +990,6 @@ function closeFinanceHelp() {
         window.openShopModal = openShopModal;
         window.closeShopModal = closeShopModal;
         window.switchTab = switchTab;
-        window.showFinanceHelp = showFinanceHelp;
-        window.closeFinanceHelp = closeFinanceHelp;
 
         const cols = 4;
         const step = 70;
@@ -285,44 +1008,26 @@ function closeFinanceHelp() {
         }
 
         function initBoard() {
-    if (!boardContainer) return;
-    boardContainer.innerHTML = `<div id="player-token"><img src="${playerSpriteUrl}" class="player-sprite"></div>`;
-    const iconGame = "https://i.pinimg.com/736x/b8/94/f5/b894f5ec29159c427f3ac1d9eebc2bfd.jpg";
-    const iconWheel = "https://i.pinimg.com/736x/69/99/a7/6999a7056739d74cb343ae09f50af849.jpg";
-    const iconQuiz = "https://i.pinimg.com/736x/0e/b6/7c/0eb67c38bd9a08e3479a5885f8210aa8.jpg";
-
-    for (let i = 0; i < 200; i++) {
-        const tile = document.createElement('div');
-        tile.className = 'board-tile';
-        const rand = Math.random() * 100;
-
-        if (i === 0) { 
-            tile.innerText = 'GO'; 
-            tile.style.background = '#2ecc71'; 
-            tile.style.fontSize = '16px';
+            if (!boardContainer) return;
+            boardContainer.innerHTML = '<div id="player-token">🚗</div>';
+            for (let i = 0; i < 200; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'board-tile';
+                const rand = Math.random() * 100;
+                if (i === 0) { tile.innerText = 'GO'; tile.style.background = '#2ecc71'; }
+                else if (rand < 15) {
+                    tile.classList.add('jackpot');
+                    tile.innerText = '🕹️';
+                    tile.dataset.type = 'catch_game';
+                }
+                else if (rand < 40) { tile.classList.add('chance'); tile.innerText = '🎡'; tile.dataset.type = 'wheel'; }
+                else { tile.classList.add('quiz'); tile.innerText = '❓'; tile.dataset.type = 'quiz'; }
+                const pos = getTilePosition(i);
+                tile.style.transform = `translate(${pos.col * step}px, ${-pos.row * step}px)`;
+                boardContainer.appendChild(tile);
+            }
+            updateGameBoardPosition();
         }
-        else if (rand < 15) { 
-            tile.classList.add('jackpot');
-            tile.innerHTML = `<img src="${iconGame}" class="tile-icon-img">`;
-            tile.dataset.type = 'catch_game'; 
-        }
-        else if (rand < 40) { 
-            tile.classList.add('chance'); 
-            tile.innerHTML = `<img src="${iconWheel}" class="tile-icon-img">`;
-            tile.dataset.type = 'wheel'; 
-        }
-        else { 
-            tile.classList.add('quiz'); 
-            tile.innerHTML = `<img src="${iconQuiz}" class="tile-icon-img">`;
-            tile.dataset.type = 'quiz'; 
-        }
-
-        const pos = getTilePosition(i);
-        tile.style.transform = `translate(${pos.col * step}px, ${-pos.row * step}px)`;
-        boardContainer.appendChild(tile);
-    }
-    updateGameBoardPosition();
-}
 
         function updateGameBoardPosition() {
             const pos = getTilePosition(currentPos);
@@ -568,7 +1273,13 @@ function closeFinanceHelp() {
             }, 1000);
         }
 
-       
+        document.querySelector('.energy-retro').addEventListener('click', () => {
+            energy = 5;
+            secondsToRegen = 1200;
+            updateAllDisplays();
+            alert("Энергия восстановлена (чит-код для демо)!");
+        });
+
         document.getElementById('quiz-modal').addEventListener('click', e => {
             if (e.target === document.getElementById('quiz-modal')) document.getElementById('quiz-modal').style.display = 'none';
         });
@@ -584,3 +1295,5 @@ function closeFinanceHelp() {
         });
     })();
 </script>
+</body>
+</html>
