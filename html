@@ -1,0 +1,271 @@
+<div class="phone-container">
+    <header class="header">
+        <div class="status-item" id="tokens-display">🪙 1250</div>
+        <div class="status-item" id="level-display">⭐️ LVL 05</div>
+        <div class="status-item" id="energy-display">⚡️ 5/5</div>
+    </header>
+
+    <div class="tabs-container">
+
+        <!-- Вкладка HOME -->
+        <div id="tab-home" class="tab-panel active">
+            <main class="main-scroll-area">
+                <section class="section-home">
+                    <div class="room-container">
+                        <img id="roomImage" class="room_img" src="https://i.pinimg.com/736x/95/9f/0a/959f0a09bfbdfa588d61b2106d348d85.jpg" alt="Home">
+                    </div>
+                </section>
+
+                <div class="sticky-title">ЛИЧНАЯ_ИНФОРМАЦИЯ</div>
+                <section class="section-info">
+                    <div class="retro-box level-section">
+                        <div class="level-header">
+                            <span class="lvl-label">УРОВЕНЬ:</span>
+                            <span class="lvl-num lvl-val">01</span>
+                        </div>
+                        <div class="xp-container">
+                            <div id="xp-bar-fill" class="xp-bar" style="width: 0%;"></div>
+                        </div>
+                        <div class="xp-details">
+                            <span id="xp-text">XP: 0 / 1000</span>
+                            <span class="blink-text">MTB_SECURE_CONNECTION...</span>
+                        </div>
+                    </div>
+
+                    <div class="finance-grid">
+                        <div class="fin-card">
+                            <label>BANK_DEBIT</label>
+                            <div class="amount">425.50 BYN</div>
+                            <div class="trend down">-12% (МЕСЯЦ)</div>
+                        </div>
+                        <div class="fin-card" style="border-color: var(--mtb-red);">
+                            <label>GAME_BALANCE</label>
+                            <div class="amount"><span class="balance-val">0</span> 🪙</div>
+                            <div class="trend up">+40% (НЕДЕЛЯ)</div>
+                        </div>
+                    </div>
+
+                    <div class="retro-box history-section">
+                        <div class="history-header">ИСТОРИЯ_ОПЕРАЦИЙ:</div>
+                        <div id="history-log-container" class="history-scroll">
+                        </div>
+                    </div>
+                </section>
+
+                <div id="shop" class="sticky-title">-- МАГАЗИН ПРИКОЛЮХ --</div>
+            <section class="shop-grid">
+                <!-- Товар 1: Доступен -->
+                
+                <div class="shop-item">
+                    <div class="item-imgage">
+                        <img class="cactus-image" src="https://i.pinimg.com/736x/e3/15/3e/e3153e12324ff09c4e2afffa328c7c1c.jpg" alt="золотой_кактус">
+                    </div>
+                    <div class="item-name">ЗОЛОТОЙ_КАКТУС</div>
+                    <div class="item-price">500 🪙</div>
+                    <!-- Добавили связь с функцией -->
+                    <button class="buy-btn" onclick="openShopModal('cactus')">КУПИТЬ</button>
+                </div>
+
+                <div class="shop-item">
+                    <div class="item-img">
+                        <div class="item-imgage">
+                            <img class="karta-image" src="https://i.pinimg.com/736x/2a/af/1a/2aaf1a1ede7a2fe27d2f4b28f448cac2.jpg" alt="карта">
+                        </div>
+                    </div>
+                    <div class="item-name">КАРТА</div>
+                    <div class="item-price">600 🪙</div>
+                    <!-- Добавляем ID товара 'map' -->
+                    <button class="buy-btn" onclick="openShopModal('map')">КУПИТЬ</button>
+                </div>
+
+                <!-- Товар 3: Недоступен (Дорого) -->
+
+                <div class="shop-item locked">
+                    <div class="item-img">🛋️</div>
+                    <div class="item-name">РЕТРО_ДИВАН</div>
+                    <div class="item-price">1500 🪙</div>
+                    <button class="buy-btn">LOCKED</button>
+                </div>
+
+                <div class="shop-item locked">
+                    <div class="item-img">💡</div>
+                    <div class="item-name">ЛАМПА</div>
+                    <div class="item-price">3560 🪙</div>
+                    <button class="buy-btn">LOCKED</button>
+                </div>
+
+                <div class="shop-item locked">
+                    <div class="item-img">🍬</div>
+                    <div class="item-name">КАРТА_ХАЛВА</div>
+                    <div class="item-price">5400 🪙</div>
+                    <button class="buy-btn">LOCKED</button>
+                </div>
+
+                <div class="shop-item locked">
+                    <div class="item-img">📺</div>
+                    <div class="item-name">ЛАМПОВЫЙ_ТВ</div>
+                    <div class="item-price">6800 🪙</div>
+                    <button class="buy-btn">LOCKED</button>
+                </div>
+
+                <!-- Товар 4: Недоступен (Дорого) -->
+                <div class="shop-item locked">
+                    <div class="item-img">🤖</div>
+                    <div class="item-name">MTБ-РОБОТ</div>
+                    <div class="item-price">99999 🪙</div>
+                    <button class="buy-btn">LOCKED</button>
+                </div>
+            </section>
+
+            <div style="height: 100px;"></div>
+            </main>
+        </div>
+
+        <!-- Модальное окно магазина -->
+        <div id="shop-modal" class="shop-modal-overlay" style="display: none;">
+            <div class="shop-modal-content">
+                <button class="close-modal-btn" onclick="closeShopModal()">[ X ]</button>
+                <div id="modal-item-img-container">
+                    <img id="modal-item-pic" src="" alt="" style="width: 100px; border: 2px solid #000;">
+                </div>
+                <h2 id="modal-item-name">ITEM_NAME</h2>
+                <p id="modal-item-desc">Description text...</p>
+                <div class="modal-price-row">
+                    <span>ЦЕНА:</span>
+                    <span id="modal-item-price">0 🪙</span>
+                </div>
+                <button id="buy-confirm-btn" class="buy-confirm-btn">ПОДТВЕРДИТЬ</button>
+            </div>
+        </div>
+
+        <!-- Вкладка GAME -->
+        <div id="tab-game" class="tab-panel">
+            <div class="energy-retro">
+                <span>⚡️ <span id="energy-count">5</span>/5</span>
+                <span id="energy-timer">МАКСИМУМ</span>
+            </div>
+            <div id="board-viewport">
+                <div id="board-container">
+                    <div id="player-token">🚗</div>
+                </div>
+            </div>
+            <div class="dice-section">
+                <div id="dice-face">⚀</div>
+                <button id="roll-btn" class="retro-btn dice-btn">БРОСИТЬ КУБИК</button>
+            </div>
+        </div>
+
+        <!-- Вкладка TOP -->
+        <div id="tab-top" class="tab-panel" style="padding: 20px;">
+            <div class="game-retro-title">🏆 ТОП ИГРОКОВ</div>
+            <div class="player-row rank-1"><div class="rank-num">01</div><div class="player-info"><span class="player-name">АЛЕКСАНДР В.</span></div><div class="player-score">100 000 🪙</div></div>
+            <div class="player-row rank-2"><div class="rank-num">02</div><div class="player-info"><span class="player-name">ДМИТРИЙ С.</span></div><div class="player-score">85 400 🪙</div></div>
+            <div class="player-row rank-3"><div class="rank-num">03</div><div class="player-info"><span class="player-name">ОЛЬГА К.</span></div><div class="player-score">72 150 🪙</div></div>
+            <div class="player-row"><div class="rank-num">04</div><div class="player-info"><span class="player-name">ИВАН БОЙЛЕР</span></div><div class="player-score">50 200 🪙</div></div>
+            <div class="player-row"><div class="rank-num">05</div><div class="player-info"><span class="player-name">АРТЕМ М.</span></div><div class="player-score">44 000 🪙</div></div>
+            <div class="player-row"><div class="rank-num">06</div><div class="player-info"><span class="player-name">МАРИЯ П.</span></div><div class="player-score">39 900 🪙</div></div>
+            <div class="player-row"><div class="rank-num">07</div><div class="player-info"><span class="player-name">НИКИТА Ж.</span></div><div class="player-score">32 500 🪙</div></div>
+            <div class="player-row"><div class="rank-num">08</div><div class="player-info"><span class="player-name">ЕЛЕНА В.</span></div><div class="player-score">28 100 🪙</div></div>
+            <div class="my-status-box" style="margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border: 2px dashed white; padding: 10px;">
+                    <div>ВАШ_РЕЙТИНГ: <strong>#99 ИВАН ИВАНОВ</strong></div>
+                    <div style="font-weight: 900;" id="my-rank-tokens">1 250 🪙</div>
+                </div>
+                <a class="earn-btn" onclick="switchTab('game')">ЗАРАБОТАТЬ ТОКЕНЫ! 🎲</a>
+            </div>
+        </div>
+
+        <!-- Вкладка FRIENDS -->
+        <div id="tab-friends" class="tab-panel" style="padding: 20px;">
+            <div class="game-retro-title">👥 ДРУЗЬЯ</div>
+            <div class="friend-card">
+                <div class="friend-avatar">🐱</div>
+                <div class="friend-main-info"><span class="friend-name">АРТЕМ МИХАЛЫЧ</span><span class="friend-tokens">44 000 🪙</span></div>
+                <div class="friend-tooltip">
+                    <div class="info-row"><span class="info-label">В ИГРЕ:</span><span class="info-val">14 ДН.</span></div>
+                    <div class="info-row"><span class="info-label">РЕЙТИНГ:</span><span class="info-val">#05</span></div>
+                    <div class="info-row"><span class="info-label">ОНЛАЙН:</span><span class="info-val" style="color:#00ff00">ONLINE</span></div>
+                </div>
+            </div>
+            <div class="friend-card">
+                <div class="friend-avatar">🦊</div>
+                <div class="friend-main-info"><span class="friend-name">МАРИЯ ПЕТРОВА</span><span class="friend-tokens">39 900 🪙</span></div>
+                <div class="friend-tooltip">
+                    <div class="info-row"><span class="info-label">В ИГРЕ:</span><span class="info-val">30 ДН.</span></div>
+                    <div class="info-row"><span class="info-label">РЕЙТИНГ:</span><span class="info-val">#06</span></div>
+                    <div class="info-row"><span class="info-label">ОНЛАЙН:</span><span class="info-val">2 ЧАСА НАЗАД</span></div>
+                </div>
+            </div>
+            <div class="invite-action-box">
+                <div class="referral-info"><span class="ref-label">ВАША_НАГРАДА:</span><span class="ref-bonus">+100 🪙 ЗА ДРУГА</span></div>
+                <a href="https://t.me/share/url?url=t.me/MTB_Game_Bot?start=ref123&text=Бро, залетай в игру от МТБанка!" class="invite-btn">ПРИГЛАСИТЬ ДРУГА!</a>
+            </div>
+        </div>
+
+        <!-- Вкладка STONKS -->
+        <div id="tab-stonks" class="tab-panel" style="padding: 20px;">
+            <div class="sticky-title">-- EXCHANGE_RATES_NBRB --</div>
+            <table class="retro-table">
+                <thead><tr><th>ВАЛЮТА</th><th style="text-align: right;">КУРС_НБРБ</th></tr></thead>
+                <tbody id="rates-table">
+                    <tr><td colspan="2" class="loading" style="text-align: center;">ПОДКЛЮЧЕНИЕ К ШЛЮЗУ...</td></tr>
+                </tbody>
+            </table>
+            <div class="update-tag" id="update-time">ОЖИДАНИЕ ДАННЫХ...</div>
+            <div class="sticky-title">-- MTB_STOCK_INDEX --</div>
+            <div class="stock-card">
+                <span class="stock-title">АКЦИИ МТБАНК (MTB)</span>
+                <div class="stock-price">145.20 🪙</div>
+                <div class="stock-trend">↑ +2.4% ЗА СЕГОДНЯ</div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <div class="nav-item active" data-tab="home"><div class="nav-icon">🏠</div><div class="nav-text">Дом</div></div>
+        <div class="nav-item" data-tab="game"><div class="nav-icon">🎲</div><div class="nav-text">Игра</div></div>
+        <div class="nav-item" data-tab="top"><div class="nav-icon">🏆</div><div class="nav-text">Топ</div></div>
+        <div class="nav-item" data-tab="friends"><div class="nav-icon">👥</div><div class="nav-text">Друзья</div></div>
+        <div class="nav-item" data-tab="stonks"><div class="nav-icon">📈</div><div class="nav-text">Стонкс</div></div>
+    </nav>
+</div>
+
+<!-- Модальные окна -->
+<div id="quiz-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h3 class="modal-title">🏦 ВОПРОС ОТ БАНКА</h3>
+        <p id="quiz-question" class="quiz-text"></p>
+        <div id="quiz-options" class="options-container"></div>
+    </div>
+</div>
+
+<div id="wheel-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h3 class="modal-title">🎰 ФОРТУНА МТБАНКА</h3>
+        <div class="wheel-outer">
+            <div class="wheel-pointer">▼</div>
+            <div id="wheel" class="wheel-container">
+                <div class="wheel-part part-1">10 🪙</div>
+                <div class="wheel-part part-2">20 🪙</div>
+                <div class="wheel-part part-3">30 🪙</div>
+                <div class="wheel-part part-4">50 🪙</div>
+                <div class="wheel-part part-5">100 🪙</div>
+            </div>
+        </div>
+        <button id="spin-btn" class="retro-btn" onclick="spinWheel()">КРУТИТЬ! 🚀</button>
+    </div>
+</div>
+
+<div id="catch-game-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content catch-game-content">
+        <h3 class="modal-title">💰 ЛОВИ КЭШБЭК!</h3>
+        <div class="game-status-bar">
+            <div id="game-timer">ВРЕМЯ: 10с</div>
+            <div id="game-score">СЧЕТ: 0</div>
+        </div>
+        <div id="game-area">
+            <img src="https://oceanminsk.by/wp-content/uploads/2022/10/logo-mtbank.jpg" alt="MTBank" id="basket">
+        </div>
+        <div class="game-instruction">[ ВОДИ ПАЛЬЦЕМ, ЧТОБЫ ЛОВИТЬ ]</div>
+    </div>
+</div>
